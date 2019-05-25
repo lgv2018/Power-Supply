@@ -4,6 +4,8 @@
 #include <EEPROM.h>
 #include <MCP47X6.h>
 #include <MCP342X.h>
+#include <Keypad.h>
+
 
 //Defination of I2C devices
 LiquidCrystal_I2C lcd(0x27,20,4);
@@ -69,6 +71,22 @@ boolean B_set = false;            // interrupt service routine vars
 void doEncoderA();
 void doEncoderB();
 void Summaryscreen();
+
+const byte ROWS = 5;
+const byte COLUMNS =4;
+//Define symbols on keypad
+char hexakeys [ROWS][COLUMNS] = {
+  {'A','B','#','*'},
+  {'1','2','3','U'},
+  {'4','5','6','D'},
+  {'7','8','9','*'},
+  {'<','0','>','*'}
+};
+
+byte rowPins[ROWS] = {1,3,5,8,10}; //connect to row pinout of the keypad
+byte columnPins[COLUMNS] = {2,4,6,9}; //connect to column pinout of keypad
+
+Keypad Customkeypad = Keypad(makeKeymap (hexakeys),rowPins,columnPins,ROWS, COLUMNS);
 
 void setup() 
 {
