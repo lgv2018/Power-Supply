@@ -85,8 +85,9 @@ char hexakeys [ROWS][COLUMNS] = {
 
 byte rowPins[ROWS] = {1,3,5,8,10}; //connect to row pinout of the keypad
 byte columnPins[COLUMNS] = {2,4,6,9}; //connect to column pinout of keypad
-
+//initialize an instance of class NewKeypad
 Keypad Customkeypad = Keypad(makeKeymap (hexakeys),rowPins,columnPins,ROWS, COLUMNS);
+int keypadEntry = 0;
 
 void setup() 
 {
@@ -336,7 +337,7 @@ void loop() {
 
     last_counter = counter; //Save the value of the last state
    }
-  if(!digitalRead(push)){
+  if(!digitalRead(push) || keypadEntry){
     delay(100);
     if(submenu == 0 && Ready==1) //Main Menu
     {    
@@ -417,6 +418,7 @@ void loop() {
             counter=0;
             pushed=0;
             Ready=0;
+            keypadEntry = 0;
             goto Start;
           }
          }while(1);
@@ -533,6 +535,7 @@ void doEncoderB() {
 
 void Summaryscreen(){
         //Printing fix portion of screen
+        
         lcd.clear();
         lcd.setCursor(1,0); lcd.print("V1="); lcd.setCursor(11,0); lcd.print("A1=");
         lcd.setCursor(1,1); lcd.print("Vi="); lcd.setCursor(11,1); lcd.print("T1=");
@@ -541,6 +544,53 @@ void Summaryscreen(){
         //Printing Variable portion of screen 
         do {
         //Reading from ADC of Card1
+        char customkey =Customkeypad.getKey();
+        switch (customkey)
+        {
+        case '1': // change current setting of the card 1
+          menu = 1; // to prevent progam entering summary screen screen
+          pushed = 1; //Entry in to menu
+          submenu =1; //jump to submenu 1 for currrent setting
+          counter = 0; //Entry in page 1 of submenu 1
+          page=1; //required for the pushed button function
+          keypadEntry = 1; //forces entry for pushe button function
+          return;
+          break;
+        
+        case '2': // change current setting of the card 2
+          menu = 1; // to prevent progam entering summary screen screen
+          pushed = 1; //Entry in to menu
+          submenu =1; //jump to submenu 1 for current
+          counter = 1; //Entry in page 2 of submenu 1
+          page=2; //required for the pushed button function
+          keypadEntry = 1; //forces entry for pushe button function
+          return;
+          break;
+
+        case '4': // change volt setting of the card 1
+          menu = 1; // to prevent progam entering summary screen screen
+          pushed = 1; //Entry in to menu
+          submenu =2; //jump to submenu 2 for voltage setting
+          counter = 0; //Entry in page 1 of submenu 1
+          page=1; //required for the pushed button function
+          keypadEntry = 1; //forces entry for pushe button function
+          return;
+          break;
+
+        case '5': // change volt setting of the card 2
+          menu = 1; // to prevent progam entering summary screen screen
+          pushed = 1; //Entry in to menu
+          submenu =1; //jump to submenu 1
+          counter = 1; //Entry in page 2 of submenu 1
+          page=2; //required for the pushed button function
+          keypadEntry = 1; //forces entry for pushe button function
+          return;
+          break;
+
+        default:
+          break;
+        }
+        
         Card1_ADC.startConversion(MCP342X_CHANNEL_1);
         Card1_ADC.getResult(&vout1_adc);
         vout1 = vout1_adc*20.480/32767;
@@ -574,11 +624,6 @@ void Summaryscreen(){
         lcd.setCursor(4,2);lcd.print(vout2,3);lcd.setCursor(14,2);lcd.print(current2,3);lcd.print(" ");
         lcd.setCursor(4,3);lcd.print(vin2,2);lcd.setCursor(14,3);lcd.print(T2,1);lcd.print(" ");
       
-        //set_volt[0]=analogRead(A2)*20.000/1000;
-        //set_current[0]=analogRead(A0)*2.000/1000;
-        //Card1_dac_volt.setOutputLevel(uint16_t (set_volt[0]*4096/20.48));
-        //Card1_dac_current.setOutputLevel(uint16_t (set_current[0]*4096/2.048));
-        //delay(100);
         if((last_counter > counter) || (last_counter < counter)  || pushed)
         {
           last_counter = counter;
