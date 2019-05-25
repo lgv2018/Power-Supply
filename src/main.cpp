@@ -42,11 +42,8 @@ int lastctr = 0;
 int max_cnt =10;
 int min_cnt =0;
 
-//Voltage divider Resistors variable
-float R[2][4]; // = {{50.0,60.0,70.0,80.00},{10.0,20.0,30.0,40.0}};
-float v_cal[2][4]; //= {{12.0,13.0,14.0,15.00},{5.0,6.0,7.0,8.0}}; //Calibration voltage 
-float set_current[2] = {5,5};   //Current settings variable
-float set_volt[2] = {1,1};
+float set_current[2] = {1,1};   //Current settings variable
+float set_volt[2] = {1,1};    //Current settings variable
 
 //Variables for LCD
 String voltage_h = "Volt(H):";
@@ -57,13 +54,12 @@ String Back = "Back";
 
 //Pin assignments
 #define push 4
-#define CH1_SW 8
-#define CH2_SW 9
-#define CH3_SW 10
-#define CH4_SW 11
 #define encoderPinA 2
 #define encoderPinB 3
 #define Menu 5
+
+long summary_delay =5000;
+long reset_timer;
 
 volatile unsigned int encoderPos = 0;  // a counter for the dial
 unsigned int lastReportedPos = 1;   // change management
@@ -93,11 +89,11 @@ void setup()
   { 
     for (j=0;j<4;j++)
     {
-      R[i][j]=EEPROM.read(EEPROM_add);
+      /* R[i][j]=EEPROM.read(EEPROM_add);
       if (R[i][j] >20 || R[i][j] <0) R[i][j] = 10;
       v_cal[i][j]=EEPROM.read(EEPROM_add+10);
       if (v_cal[i][j] >20 || v_cal[i][j] <0) v_cal[i][j] = 10;
-      EEPROM_add++;
+      EEPROM_add++; */
     }
   }
 
@@ -146,11 +142,6 @@ void setup()
                   MCP342X_SIZE_16BIT |
                   MCP342X_GAIN_1X);
 
-  set_current[0]=analogRead(A0)*2.000/1000;
-  set_volt[0]=analogRead(A2)*20.000/1000;
-  set_current[1]=analogRead(A1)*2.000/1000;
-  set_volt[1]=analogRead(A3)*20.000/1000;
-
   Card1_dac_current.setOutputLevel(uint16_t (set_current[0]*4096/2.048));
   Card1_dac_volt.setOutputLevel(uint16_t (set_volt[0]*4096/20.48));
   Card2_dac_current.setOutputLevel(uint16_t (set_current[1]*4096/2.048));
@@ -170,7 +161,9 @@ void loop() {
     menu=1;                                                                                                                                                                                                                           menu =1;
     Ready=1;
     if(submenu == 0) //Main Menu
-    {  
+    { 
+      reset_timer= millis ();
+      Serial.println(reset_timer);
       max_cnt=2;
       if(0 <= counter && counter < 1)
       {
@@ -213,7 +206,8 @@ void loop() {
 
     if(submenu == 1) //Current settings
     {  
-        max_cnt=3;
+        max_cnt=2;
+        reset_timer= millis ();
         if(0 <= counter && counter < 1)
         {
           lcd.clear();
@@ -261,14 +255,15 @@ void loop() {
           lcd.print(set_current[0],3);
           lcd.setCursor(15,1);
           lcd.print(set_current[1],3);
-          delay(100);
+          delay(10);
         }
         
     }//submenu = 1;
 
     if(submenu == 2) //Voltage settings
     {  
-      max_cnt=3;
+      max_cnt=2;
+      reset_timer= millis ();
       if(0 <= counter && counter < 1)
       {
         lcd.clear();
@@ -316,54 +311,11 @@ void loop() {
         lcd.print(set_volt[0],3);
         lcd.setCursor(15,1);
         lcd.print(set_volt[1],3);
-        delay(100);
+        delay(10);
       } 
 
     }//submenu = 2;
 
-    if(submenu == 3) //Calibration
-    {  
-      if(0 <= counter && counter < 2)
-      {
-        lcd.clear();
-        lcd.setCursor(0,0);
-        lcd.write(1);  
-        lcd.print("Current Sensor");
-        lcd.setCursor(0,1);  
-        lcd.print(" Voltage Devider"); 
-        lcd.setCursor(1,2);  
-        lcd.print(Back);
-        page=1;
-        pushed=0;    
-      }
-    
-      if(2 <= counter && counter < 4)
-      {
-        lcd.clear();
-        lcd.setCursor(0,0);  
-        lcd.print(" Current Sensor");
-        lcd.setCursor(0,1);  
-        lcd.write(1);
-        lcd.print("Voltage Devider");
-        lcd.setCursor(1,2);  
-        lcd.print(Back);
-        page=2;
-        pushed=0;      
-      } 
-      if(4 <= counter && counter < 6)
-      {
-        lcd.clear();
-        lcd.setCursor(0,0);  
-        lcd.print(" Current Sensor");
-        lcd.setCursor(0,1);  
-        lcd.print(" Voltage Devider");
-        lcd.setCursor(0,2);
-        lcd.write(1);  
-        lcd.print(Back);
-        page=3;
-        pushed=0;      
-      }  
-    }//submenu = 3;
     last_counter = counter; //Save the value of the last state
    }
   if(!digitalRead(push)){
@@ -399,126 +351,59 @@ void loop() {
        }
     }//end of submenu 0
     if(submenu == 1) //Current Settings
-    {
-      do
-      {
-        if(page==3)
-          {
-            submenu =0;
-            delay(DL);
-            counter=0;
-            pushed=0;
-            Ready=0;
-            goto Start;
-          }
-        switch (page)
-      {
-        case 1:
-          lcd.setCursor(14,0);
-          lcd.write(1);
-          //a1_set_raw = analogRead(A0);
-          set_current[0]=a1_set_raw*2.000/1000;
-          lcd.print(a1_set_raw*2.000/1000,3);
-          Card1_dac_current.setOutputLevel(uint16_t (set_current[0]*4096/2.048));
-          break;
-        case 2:
-          lcd.setCursor(14,1);
-          lcd.write(1);
-          a2_set_raw = analogRead(A1);
-          set_current[1]=a2_set_raw*2.000/1000;
-          lcd.print(a2_set_raw*2.000/1000,3);
-          Card2_dac_current.setOutputLevel(uint16_t (set_current[0]*4096/2.048));
-          break;
-        default:
-       
-          break;
-      }
-      delay(100);
-       if(!digitalRead(push)) //button on encoder to be pressed to break the loop 
-          {
-            delay(5);
-            counter=0;
-            pushed=0;
-            Ready=0;
-            goto Start;
-          }
-      } while (1);
-    }//end of submenu 1
-    if(submenu == 2) //Voltage settings
     { 
-      do
-      {
-        if(page==3)
+      counter = 0;
+      lastctr = 0;
+       if(page==1 || page==2 )
+       {
+         int COL = 0;
+         int ROW = 0;
+         counter = 0;
+         for(i=0; i <=3; i++)
+         {
+          if (page==(i+1))
           {
-            submenu =0;
-            page = 1;
+            COL =i;
+            ROW =i;
+          }
+         }
+         lcd.setCursor(0,ROW);
+         lcd.print(" ");
+         do
+         {
+          if(counter != lastctr)
+          {
+            if (counter > lastctr) set_current[COL] = set_current[COL]+0.01;
+            if (counter < lastctr) set_current[COL] = set_current[COL]-0.01;
+            if (set_current[COL]>2.048) set_current [COL]= 2.048;
+            if (set_current[COL]<0) set_current [COL] = 0.0;
+          }
+          lcd.setCursor(14,ROW);
+          lcd.write(1);
+          switch (page)
+          {
+            case 1:
+              Card1_dac_current.setOutputLevel(uint16_t (set_current[COL]*4096/2.048));
+              break;
+            case 2:
+              Card2_dac_current.setOutputLevel(uint16_t (set_current[COL]*4096/2.048));
+              break;
+          }
+          lcd.print(set_current[COL]);
+          lastctr = counter;
+          delay(100);
+          if(!digitalRead(push))
+          {
+            page = ROW +1;
             delay(DL);
             counter=0;
             pushed=0;
             Ready=0;
             goto Start;
           }
-      switch (page)
-      {
-        case 1:
-          lcd.setCursor(14,0);
-          lcd.write(1);
-          v1_set_raw = analogRead(A2);
-          set_volt[0]=v1_set_raw*20.000/1000;
-          lcd.print(v1_set_raw*20.000/1000,3);
-          Card1_dac_volt.setOutputLevel(uint16_t (set_volt[0]*4096/20.48));
-          break;
-        case 2:
-          lcd.setCursor(14,1);
-          lcd.write(1);
-          v2_set_raw = analogRead(A3);
-          set_volt[1]=v2_set_raw*20.000/1000;
-          lcd.print(v2_set_raw*20.000/1000,3);
-          Card2_dac_volt.setOutputLevel(uint16_t (set_volt[0]*4096/20.48));
-          break;
-        default:
-          break;
-      }
-      delay(100);
-       if(!digitalRead(push))
-          {
-            delay(DL);
-            counter=0;
-            pushed=0;
-            Ready=0;
-            goto Start;
-          }
-      }while(1);
-      if(page==3)
-       {
-        submenu=0;
-        counter=0;
-        pushed=0;
-        Ready=0;
-        delay(DL);
+         }while(1);
        }
-    }//end of submenu 2
-    if(submenu == 3) //Calibration
-    {    
-       if(page==1)
-       {
-        submenu=6;
-        counter=0;
-        pushed=0;
-        Ready=0; 
-        delay(DL);
-        goto Start;
-       }
-    
-       if(page==2)
-       {
-        submenu=7;
-        counter=0;
-        pushed=0;
-        Ready=0;
-        delay(DL);
-        goto Start;
-       }
+
        if(page==3)
        {
         submenu=0;
@@ -527,8 +412,74 @@ void loop() {
         Ready=0;
         delay(DL);
        }
-    }//end of submenu 3
+    }//end of submenu 1
+    if(submenu == 2) //Voltage settings
+    { 
+      counter = 0;
+      lastctr = 0;  
+       if(page==1 || page==2 )
+       {
+         int COL = 0;
+         int ROW = 0;
+         counter = 0;
+         for(i=0; i <=3; i++)
+         {
+          if (page==(i+1))
+          {
+            COL =i;
+            ROW =i;
+          }
+         }
+         lcd.setCursor(0,ROW);
+         lcd.print(" ");
+         do
+         {
+          if(counter != lastctr)
+          {
+            if (counter > lastctr) set_volt[COL] = set_volt[COL]+0.1;
+            if (counter < lastctr) set_volt[COL] = set_volt[COL]-0.1;
+            if (set_volt[COL]>20.48) set_volt[COL]= 20.48;
+            if (set_volt[COL]<0) set_volt[COL] = 0.000;
+          }
+          lcd.setCursor(14,ROW);
+          lcd.write(1);
+          switch (page)
+          {
+            case 1:
+              Card1_dac_volt.setOutputLevel(uint16_t (set_volt[COL]*4096/20.48));
+              break;
+            case 2:
+              Card2_dac_volt.setOutputLevel(uint16_t (set_volt[COL]*4096/20.48));
+              break;
+          }
+          lcd.print(set_volt[COL]);
+          lastctr = counter;
+          delay(100);
+          if(!digitalRead(push))
+          {
+            delay(DL);
+            counter=0;
+            pushed=0;
+            Ready=0;
+            goto Start;
+          }
+         }while(1);
+       }
 
+       if(page==3)
+       {
+        submenu=0;
+        counter=0;
+        pushed=0;
+        Ready=0;
+        delay(DL);
+       }
+    }//end of submenu 2
+  }
+
+    if (millis() - reset_timer > summary_delay)
+  {
+    menu = 0;
   }
   
   //Add limit for the counter. Each line of the menu has 2 points. Since my menu has 5 lines the maximum counter will be from 0 to 10
