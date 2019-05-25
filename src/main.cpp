@@ -535,7 +535,6 @@ void doEncoderB() {
 
 void Summaryscreen(){
         //Printing fix portion of screen
-        
         lcd.clear();
         lcd.setCursor(1,0); lcd.print("V1="); lcd.setCursor(11,0); lcd.print("A1=");
         lcd.setCursor(1,1); lcd.print("Vi="); lcd.setCursor(11,1); lcd.print("T1=");
@@ -576,7 +575,7 @@ void Summaryscreen(){
           keypadEntry = 1; //forces entry for pushe button function
           return;
           break;
-
+  
         case '5': // change volt setting of the card 2
           menu = 1; // to prevent progam entering summary screen screen
           pushed = 1; //Entry in to menu
