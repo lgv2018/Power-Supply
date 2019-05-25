@@ -86,17 +86,7 @@ void setup()
 
   //Define the pin as input & OUTPUT
   pinMode (push,INPUT);
-  pinMode (CH1_SW, OUTPUT);   
-  pinMode (CH2_SW, OUTPUT);  
-  pinMode (CH3_SW, OUTPUT);  
-  pinMode (CH4_SW, OUTPUT); 
-  //DDRD = B11110000;
-
-  digitalWrite(CH1_SW,HIGH);
-  digitalWrite(CH2_SW,HIGH);
-  digitalWrite(CH3_SW,HIGH);
-  digitalWrite(CH4_SW,HIGH);
-
+  
   // Read EEPROM settings
   int EEPROM_add = 0;
   for(i=0;i<2;i++)
@@ -129,17 +119,17 @@ void setup()
   Card1_dac_current.setVReference(MCP47X6_VREF_VREFPIN_BUFFERED);
   Card1_dac_current.setGain(MCP47X6_GAIN_1X);
   Card1_dac_current.saveSettings();
-  // Initialize DAC1 for setting of the voltage
+  // Initialize DAC2 for setting of the voltage
   Card2_dac_volt.begin();
   Card2_dac_volt.setVReference(MCP47X6_VREF_VREFPIN_BUFFERED);
   Card2_dac_volt.setGain(MCP47X6_GAIN_1X);
   Card2_dac_volt.saveSettings();
-  // Initialize DAC1 for setting of the current
+  // Initialize DAC2 for setting of the current
   Card2_dac_current.begin();
   Card2_dac_current.setVReference(MCP47X6_VREF_VREFPIN_BUFFERED);
   Card2_dac_current.setGain(MCP47X6_GAIN_1X);
   Card2_dac_current.saveSettings();
-  //Initialize ADC1 for reading of the current & voltage
+  //Initialize ADC for reading of the current & voltage
   Wire.begin();
   Card1_ADC.configure(MCP342X_MODE_CONTINUOUS | 
                   MCP342X_CHANNEL_1 |
@@ -181,7 +171,7 @@ void loop() {
     Ready=1;
     if(submenu == 0) //Main Menu
     {  
-      max_cnt=3;
+      max_cnt=2;
       if(0 <= counter && counter < 1)
       {
         lcd.clear();
@@ -374,7 +364,6 @@ void loop() {
         pushed=0;      
       }  
     }//submenu = 3;
-  
     last_counter = counter; //Save the value of the last state
    }
   if(!digitalRead(push)){
@@ -416,7 +405,6 @@ void loop() {
         if(page==3)
           {
             submenu =0;
-            //page = 1;
             delay(DL);
             counter=0;
             pushed=0;
@@ -428,7 +416,7 @@ void loop() {
         case 1:
           lcd.setCursor(14,0);
           lcd.write(1);
-          a1_set_raw = analogRead(A0);
+          //a1_set_raw = analogRead(A0);
           set_current[0]=a1_set_raw*2.000/1000;
           lcd.print(a1_set_raw*2.000/1000,3);
           Card1_dac_current.setOutputLevel(uint16_t (set_current[0]*4096/2.048));
@@ -446,10 +434,9 @@ void loop() {
           break;
       }
       delay(100);
-       if(!digitalRead(push))
+       if(!digitalRead(push)) //button on encoder to be pressed to break the loop 
           {
-            //page = 1;
-            delay(DL);
+            delay(5);
             counter=0;
             pushed=0;
             Ready=0;
@@ -495,7 +482,6 @@ void loop() {
       delay(100);
        if(!digitalRead(push))
           {
-            //page = 1;
             delay(DL);
             counter=0;
             pushed=0;
@@ -544,11 +530,13 @@ void loop() {
     }//end of submenu 3
 
   }
+  
   //Add limit for the counter. Each line of the menu has 2 points. Since my menu has 5 lines the maximum counter will be from 0 to 10
   if(counter > max_cnt) counter=0;
   if(counter < 0) counter=max_cnt;  
 }//end void
 
+// Interrupt on A changing state
 void doEncoderA() {
   // debounce 
   if ( rotating ) delay (1);  // wait a little until the bouncing is done
@@ -570,17 +558,17 @@ void doEncoderB() {
     //  adjust counter - 1 if B leads A
     if ( B_set && !A_set )
       counter -= 1;
-    rotating = false;
+    rotating = false; // no more debouncing until loop() hits again
   }
 }
 
 void Summaryscreen(){
         //Printing fix portion of screen
         lcd.clear();
-        lcd.setCursor(1,0); lcd.print(" V1="); lcd.setCursor(11,0); lcd.print("A1=");
-        lcd.setCursor(1,1); lcd.print(" Vi="); lcd.setCursor(11,1); lcd.print("T1=");
-        lcd.setCursor(1,2); lcd.print(" V2="); lcd.setCursor(11,2); lcd.print("A2=");
-        lcd.setCursor(1,3); lcd.print(" Vi="); lcd.setCursor(11,3); lcd.print("T2=");
+        lcd.setCursor(1,0); lcd.print("V1="); lcd.setCursor(11,0); lcd.print("A1=");
+        lcd.setCursor(1,1); lcd.print("Vi="); lcd.setCursor(11,1); lcd.print("T1=");
+        lcd.setCursor(1,2); lcd.print("V2="); lcd.setCursor(11,2); lcd.print("A2=");
+        lcd.setCursor(1,3); lcd.print("Vi="); lcd.setCursor(11,3); lcd.print("T2=");
         //Printing Variable portion of screen 
         do {
         //Reading from ADC of Card1
@@ -610,22 +598,24 @@ void Summaryscreen(){
         Card2_ADC.startConversion(MCP342X_CHANNEL_4);
         Card2_ADC.getResult(&T2_adc);
         T2 = ((T2_adc*2.048/32767)-0.5)*100;
+        
         //Printing all data 
-        lcd.setCursor(5,0);lcd.print(vout1,3);lcd.setCursor(14,0);lcd.print(current1,3);lcd.print(" ");
-        lcd.setCursor(5,1);lcd.print(vin1,3);lcd.setCursor(14,1);lcd.print(T1,1);lcd.print(" ");
-        lcd.setCursor(5,2);lcd.print(vout2,3);lcd.setCursor(14,2);lcd.print(current2,3);lcd.print(" ");
-        lcd.setCursor(5,3);lcd.print(vin2,3);lcd.setCursor(14,3);lcd.print(T2,1);lcd.print(" ");
+        lcd.setCursor(4,0);lcd.print(vout1,3);lcd.setCursor(14,0);lcd.print(current1,3);lcd.print(" ");
+        lcd.setCursor(4,1);lcd.print(vin1,2);lcd.setCursor(14,1);lcd.print(T1,1);lcd.print(" ");
+        lcd.setCursor(4,2);lcd.print(vout2,3);lcd.setCursor(14,2);lcd.print(current2,3);lcd.print(" ");
+        lcd.setCursor(4,3);lcd.print(vin2,2);lcd.setCursor(14,3);lcd.print(T2,1);lcd.print(" ");
       
-        set_volt[0]=analogRead(A2)*20.000/1000;
-        set_current[0]=analogRead(A0)*2.000/1000;
+        //set_volt[0]=analogRead(A2)*20.000/1000;
+        //set_current[0]=analogRead(A0)*2.000/1000;
         //Card1_dac_volt.setOutputLevel(uint16_t (set_volt[0]*4096/20.48));
         //Card1_dac_current.setOutputLevel(uint16_t (set_current[0]*4096/2.048));
         //delay(100);
         if((last_counter > counter) || (last_counter < counter)  || pushed)
         {
+          last_counter = counter;
+          counter = 0;
           menu = 1;
-          lcd.clear();
           return;
         }
-        } while(1);
+      } while(1);
 }
