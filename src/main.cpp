@@ -338,8 +338,8 @@ void loop() {
           lastctr = counter;
           delay(100); //important for debouncing of encoder push switch
           char customkey1 =Customkeypad.getKey();
-          if(customkey1 == 'U') delta=delta*10;
-          if(customkey1 == 'D') delta=delta/10;
+          if(customkey1 == '<') delta=delta*10;
+          if(customkey1 == '>') delta=delta/10;
           if(customkey1 == 'E')
           {
             last_counter = 0;
@@ -443,8 +443,8 @@ void loop() {
           lastctr = counter;
           delay(100); //important for debouncing of encoder push switch
           char customkey1 =Customkeypad.getKey();
-          if(customkey1 == 'U') delta=delta*10;
-          if(customkey1 == 'D') delta=delta/10;
+          if(customkey1 == '<') delta=delta*10;
+          if(customkey1 == '>') delta=delta/10;
           if(customkey1 == 'E')
           {
             last_counter = 0;
