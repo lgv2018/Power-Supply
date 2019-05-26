@@ -25,6 +25,12 @@ float max_volt = 20.48;
 float min_volt = 0.00;
 float max_current = 2.048;
 float min_current = 0.000;
+float set_current[2] = {0.1,0.1};   //Current settings variable
+float set_volt[2] = {6.000,5.000};    //Current settings variable
+float cal_volt1 = 0.032;
+float cal_volt2 = 0;
+float cal_cur1 = 0;
+float cal_cur2 = 0;
 
 //Variables for the menu encoder
 int counter = 0; 
@@ -42,15 +48,13 @@ int lastctr = 0;
 int max_cnt =10;
 int min_cnt =0;
 
-float set_current[2] = {0.1,0.1};   //Current settings variable
-float set_volt[2] = {5,5};    //Current settings variable
-
 //Variables for LCD
 String voltage_h = "Volt(H):";
 String voltage_L = "Volt(L):";
 String R1 = "R1=";
 String R2 = "R2=";
 String Back = "Back";
+bool cursor_flag = LOW;
 
 //Pin assignments
 #define push 4

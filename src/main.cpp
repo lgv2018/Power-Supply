@@ -245,9 +245,11 @@ void loop() {
       if(page <=3)
       {
         lcd.setCursor(15,0);
-        lcd.print(set_volt[0],3);
+        if(set_volt[0]+2.0<10.0) lcd.print((set_volt[0]+2.0),3);
+        if(set_volt[0]+2.0>=10.0) lcd.print((set_volt[0]+2.0),2);
         lcd.setCursor(15,1);
-        lcd.print(set_volt[1],3);
+        if(set_volt[1]+2.0<10.0) lcd.print((set_volt[1]+2.0),3);
+        if(set_volt[1]+2.0>=10.0) lcd.print((set_volt[1]+2.0),2);
         delay(10);
       } 
 
@@ -291,7 +293,8 @@ void loop() {
     { 
       counter = 0;
       lastctr = 0;
-      Serial.print(page);
+      lcd.setCursor(8,3);
+      lcd.print("Delta= " );
        if(page==1 || page==2 )
        {
          int COL = 0;
@@ -309,6 +312,10 @@ void loop() {
          lcd.print(" ");
          do
          {
+          if(delta>=10) delta =1;
+          if(delta<0.001) delta =0.001;
+          lcd.setCursor(15,3);
+          lcd.print(delta,3); 
           if(counter != lastctr)
           {
             if (counter > lastctr) set_current[COL] = set_current[COL]+delta;
@@ -318,8 +325,6 @@ void loop() {
           }
           lcd.setCursor(14,ROW);
           lcd.write(1);
-          //lcd.cursor();
-          //lcd.blink_on();
           switch (page)
           {
             case 1:
@@ -329,7 +334,7 @@ void loop() {
               Card2_dac_current.setOutputLevel(uint16_t (set_current[COL]*DAC_bits/max_current));
               break;
           }
-          lcd.print(set_current[COL]);
+          lcd.print(set_current[COL],3);
           lastctr = counter;
           delay(100); //important for debouncing of encoder push switch
           char customkey1 =Customkeypad.getKey();
@@ -371,7 +376,11 @@ void loop() {
     if(submenu == 2) //Voltage settings
     { 
       counter = 0;
-      lastctr = 0;  
+      lastctr = 0;
+      lcd.setCursor(9,2);
+      lcd.print("Vact= " );  
+      lcd.setCursor(8,3);
+      lcd.print("Delta= " );
        if(page==1 || page==2 )
        {
          int COL = 0;
@@ -389,13 +398,30 @@ void loop() {
          lcd.print(" ");
          do
          {
-          Serial.print(delta);
+          if(page==1)
+          {
+            Card1_ADC.startConversion(MCP342X_CHANNEL_1);
+            Card1_ADC.getResult(&vout1_adc);
+            vout1 = vout1_adc*max_volt/ADC_bits;
+            lcd.setCursor(15,2);lcd.print(vout1+cal_volt1,3);
+          }
+          if(page==2)
+          {
+            Card2_ADC.startConversion(MCP342X_CHANNEL_1);
+            Card2_ADC.getResult(&vout2_adc);
+            vout2 = vout2_adc*max_volt/ADC_bits;
+            lcd.setCursor(15,2);lcd.print(vout2+cal_volt2,3);
+            }
+          if(delta>=10) delta =1;
+          if(delta<0.001) delta =0.001;
+          lcd.setCursor(15,3);
+          lcd.print(delta,3); 
           if(counter != lastctr)
           {
             if (counter > lastctr) set_volt[COL] = set_volt[COL]+delta;
             if (counter < lastctr) set_volt[COL] = set_volt[COL]-delta;
             if (set_volt[COL]>max_volt) set_volt[COL]= max_volt;
-            if (set_volt[COL]<min_volt) set_volt[COL] = min_volt;
+            if (set_volt[COL]<min_volt) set_volt[COL]= min_volt;
           }
           lcd.setCursor(14,ROW);
           lcd.write(1);
@@ -408,7 +434,8 @@ void loop() {
               Card2_dac_volt.setOutputLevel(uint16_t (set_volt[COL]*DAC_bits/max_volt));
               break;
           }
-          lcd.print(set_volt[COL]);
+          if(set_volt[COL]+2.0<10.0) lcd.print((set_volt[COL]+2.0),3);
+          if(set_volt[COL]+2.0>=10.0) lcd.print((set_volt[COL]+2.0),2);
           lastctr = counter;
           delay(100); //important for debouncing of encoder push switch
           char customkey1 =Customkeypad.getKey();
@@ -538,7 +565,10 @@ void Summaryscreen(){
           keypadEntry = 1; //forces entry for pushe button function
           return;
           break;
-        
+        case '*':
+          Card1_dac_volt.setOutputLevel(uint16_t ((set_volt[0] + (set_volt[0]+2.0-(vout1+cal_volt1)))*DAC_bits/max_volt));
+          break;
+
         default:
           break;
         } 
@@ -571,11 +601,14 @@ void Summaryscreen(){
         T2 = ((T2_adc*max_current/ADC_bits)-0.5)*100;
         
         //Printing all data 
-        lcd.setCursor(4,0);lcd.print(vout1,3);lcd.setCursor(14,0);lcd.print(current1,3);lcd.print(" ");
+        lcd.setCursor(4,0);lcd.print(vout1+cal_volt1,3);lcd.setCursor(14,0);lcd.print(current1+cal_cur1,3);lcd.print(" ");
         lcd.setCursor(4,1);lcd.print(vin1,2);lcd.setCursor(14,1);lcd.print(T1,1);lcd.print(" ");
-        lcd.setCursor(4,2);lcd.print(vout2,3);lcd.setCursor(14,2);lcd.print(current2,3);lcd.print(" ");
+        lcd.setCursor(4,2);lcd.print(vout2+cal_volt2,3);lcd.setCursor(14,2);lcd.print(current2+cal_cur2,3);lcd.print(" ");
         lcd.setCursor(4,3);lcd.print(vin2,2);lcd.setCursor(14,3);lcd.print(T2,1);lcd.print(" ");
-      
+        Serial.print("\n");
+        //set_volt[0] = set_volt[0] + (set_volt[0]+2.0-(vout1+cal_volt1));
+        Serial.print(set_volt[0] + (set_volt[0]+2.0-(vout1+cal_volt1)),3);      
+        Serial.print((set_volt[0]+2.0-(vout1+cal_volt1)),3);      
         if((last_counter > counter) || (last_counter < counter))
         {
           last_counter = counter;
