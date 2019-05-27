@@ -26,11 +26,31 @@ float min_volt = 0.00;
 float max_current = 2.048;
 float min_current = 0.000;
 float set_current[2] = {0.1,0.1};   //Current settings variable
-float set_volt[2] = {6.000,5.000};    //Current settings variable
-float cal_volt1 = 0.032;
-float cal_volt2 = 0;
-float cal_cur1 = 0;
-float cal_cur2 = 0;
+float set_volt[2] = {3.000,3.000};    //Current settings variable
+
+//calibration of the Voltage 1
+float v1_ref_low = 6.103;
+float v1_ref_high = 11.083;
+float v1_raw_low = 6.082;
+float v1_raw_high = 11.043;
+
+//calibration of the Voltage 2
+float v2_ref_low = 6.000;
+float v2_ref_high = 12.000;
+float v2_raw_low = 6.000;
+float v2_raw_high = 12.000;
+
+//calibration of the Current 1
+float a1_ref_low = 0.000;
+float a1_ref_high = 2.048;
+float a1_raw_low = 0.000;
+float a1_raw_high = 2.048;
+
+//calibration of the Current 2
+float a2_ref_low = 0.000;
+float a2_ref_high = 2.048;
+float a2_raw_low = 0.000;
+float a2_raw_high = 2.048;
 
 //Variables for the menu encoder
 int counter = 0; 
@@ -72,6 +92,7 @@ boolean B_set = false;            // interrupt service routine vars
 void doEncoderA();
 void doEncoderB();
 void Summaryscreen();
+float calibration (float rawvalue, int param);
 
 const byte ROWS = 5;
 const byte COLUMNS =4;

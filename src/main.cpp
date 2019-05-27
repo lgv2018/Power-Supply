@@ -404,8 +404,10 @@ void loop() {
             Card1_ADC.getResult(&vout1_adc);
             vout1 = vout1_adc*max_volt/ADC_bits;
             lcd.setCursor(15,2);
-            if((vout1+cal_volt1)<10.0) lcd.print(vout1+cal_volt1,3);
-            if((vout1+cal_volt1)>=10.0) lcd.print(vout1+cal_volt1,2);
+            if(calibration(vout1,1)<10.0) lcd.print(calibration(vout1,1),3);
+            if(calibration(vout1,1)>=10.0) {lcd.print(calibration(vout1,1),2);
+            Serial.print(calibration(vout1,1),3);
+            Serial.print("\n");}
           }
           if(page==2)
           {
@@ -413,8 +415,8 @@ void loop() {
             Card2_ADC.getResult(&vout2_adc);
             vout2 = vout2_adc*max_volt/ADC_bits;
             lcd.setCursor(15,2);
-            if((vout2+cal_volt2)<10.0) lcd.print(vout2+cal_volt2,3);
-            if((vout2+cal_volt2)>=10.0) lcd.print(vout2+cal_volt2,2);
+            if(calibration(vout2,2)<10.0) lcd.print(calibration(vout2,2),3);
+            if(calibration(vout2,2)>=10.0) lcd.print(calibration(vout2,2),2);
           }
           if(delta>=10) delta =1;
           if(delta<0.001) delta =0.001;
@@ -570,7 +572,7 @@ void Summaryscreen(){
           return;
           break;
         case '*':
-          Card1_dac_volt.setOutputLevel(uint16_t ((set_volt[0] + (set_volt[0]+2.0-(vout1+cal_volt1)))*DAC_bits/max_volt));
+          //Card1_dac_volt.setOutputLevel(uint16_t ((set_volt[0] + (set_volt[0]+2.0-(vout1+cal_volt1)))*DAC_bits/max_volt));
           break;
 
         default:
@@ -605,14 +607,10 @@ void Summaryscreen(){
         T2 = ((T2_adc*max_current/ADC_bits)-0.5)*100;
         
         //Printing all data 
-        lcd.setCursor(4,0);lcd.print(vout1+cal_volt1,3);lcd.setCursor(14,0);lcd.print(current1+cal_cur1,3);lcd.print(" ");
+        lcd.setCursor(4,0);lcd.print(calibration(vout1,1),3);lcd.setCursor(14,0);lcd.print(calibration(current1,3),3);lcd.print(" ");
         lcd.setCursor(4,1);lcd.print(vin1,2);lcd.setCursor(14,1);lcd.print(T1,1);lcd.print(" ");
-        lcd.setCursor(4,2);lcd.print(vout2+cal_volt2,3);lcd.setCursor(14,2);lcd.print(current2+cal_cur2,3);lcd.print(" ");
+        lcd.setCursor(4,2);lcd.print(calibration(vout2,2),3);lcd.setCursor(14,2);lcd.print(calibration(current2,4),3);lcd.print(" ");
         lcd.setCursor(4,3);lcd.print(vin2,2);lcd.setCursor(14,3);lcd.print(T2,1);lcd.print(" ");
-        Serial.print("\n");
-        //set_volt[0] = set_volt[0] + (set_volt[0]+2.0-(vout1+cal_volt1));
-        Serial.print(set_volt[0] + (set_volt[0]+2.0-(vout1+cal_volt1)),3);      
-        Serial.print((set_volt[0]+2.0-(vout1+cal_volt1)),3);      
         if((last_counter > counter) || (last_counter < counter))
         {
           last_counter = counter;
@@ -622,4 +620,33 @@ void Summaryscreen(){
           return;
         }
       } while(1);
+}
+
+float calibration (float rawvalue, int param){
+  
+  float corrected_value;
+  switch (param)
+  {
+  case 1:
+    //corrected_value = rawvalue;
+    corrected_value = ((((rawvalue - v1_raw_low) * (v1_ref_high - v1_ref_low )) / (v1_raw_high - v1_raw_low) ) + v1_ref_low);
+    return corrected_value;
+    break;
+  case 2:
+    corrected_value = ((((rawvalue - v2_raw_low) * (v2_ref_high - v2_ref_low )) / (v2_raw_high - v2_raw_low) ) + v2_ref_low);
+    return corrected_value;
+    break;
+  case 3:
+    corrected_value = ((((rawvalue - a1_raw_low) * (a1_ref_high - a1_ref_low )) / (a1_raw_high - a1_raw_low) ) + a1_ref_low);
+    return corrected_value;
+    break;
+  case 4:
+    corrected_value = ((((rawvalue - a2_raw_low) * (a2_ref_high - a2_ref_low )) / (a2_raw_high - a2_raw_low) ) + a2_ref_low);
+    return corrected_value;
+    break;
+  default:
+    return rawvalue;
+    break;
+  }
+
 }
