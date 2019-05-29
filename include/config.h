@@ -28,6 +28,11 @@ float min_current = 0.000;
 float set_current[2] = {0.1,0.1};   //Current settings variable
 float set_volt[2] = {3.000,3.000};    //Current settings variable
 
+float cal[4][4];  /* ={{6.103, 11.083, 6.082, 11.043},  //V1 {ref_low, ref_high, raw_low, raw_high}
+                  {6.000, 12.000, 6.000, 12.000},  //V2 {ref_low, ref_high, raw_low, raw_high}
+                  {6.000, 12.000, 6.000, 12.000},  //a1 {ref_low, ref_high, raw_low, raw_high}
+                  {6.000, 12.000, 6.000, 12.000}}; */ //a2 {ref_low, ref_high, raw_low, raw_high}
+
 //calibration of the Voltage 1
 float v1_ref_low = 6.103;
 float v1_ref_high = 11.083;
@@ -81,7 +86,7 @@ bool cursor_flag = LOW;
 #define encoderPinA 2
 #define encoderPinB 3
 
-long summary_delay =5000;
+ulong summary_delay =5000;
 long reset_timer;
 
 volatile unsigned int encoderPos = 0;  // a counter for the dial
@@ -110,3 +115,6 @@ byte columnPins[COLUMNS] = {5,6,A0,A1}; //connect to column pinout of keypad
 //initialize an instance of class NewKeypad
 Keypad Customkeypad = Keypad(makeKeymap (hexakeys),rowPins,columnPins,ROWS, COLUMNS);
 int keypadEntry = 0;
+
+
+void set_calibration (int c);
