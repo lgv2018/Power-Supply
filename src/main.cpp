@@ -6,6 +6,7 @@
 #include <MCP342X.h>
 #include <Keypad.h>
 #include <config.h>
+#include <powercard.h>
 
 void setup() 
 {
