@@ -9,14 +9,17 @@
 
 void setup() 
 {
+  //encoder configuration
   pinMode(encoderPinA, INPUT);
   pinMode(encoderPinB, INPUT);
   digitalWrite(encoderPinA, HIGH); // turn on pullup resistors
   digitalWrite(encoderPinB, HIGH); // turn on pullup resistors
   attachInterrupt(0, doEncoderA, CHANGE);  // encoder pin on interrupt 0 (pin 2)
   attachInterrupt(1, doEncoderB, CHANGE);  // encoder pin on interrupt 1 (pin 3)
-  Serial.begin(9600);
   pinMode (push,INPUT); //Define the pin as input & OUTPUT
+  //end of encoder configuration
+
+  Serial.begin(9600);
   
   //Read calibration data from EEPROM
   int EEPROM_add = 0;
@@ -29,14 +32,14 @@ void setup()
       EEPROM_add += sizeof(cal[i][j]);
     }
   }
-  // Initialize LCD
+
+  //LCD configuration
   lcd.begin();
   lcd.backlight(); 
   lcd.createChar(1, arrow);
-  lcd.createChar(2, ON);
-  lcd.createChar(3, OFF);
-  lcd.clear();
-  lcd.setCursor(0,1);  
+  //end of encoder configuration
+
+  //configuration of power card
   //Initialize DAC1 for setting of the voltage
   Card1_dac_volt.begin();
   Card1_dac_volt.setVReference(MCP47X6_VREF_VREFPIN_BUFFERED);
@@ -58,7 +61,6 @@ void setup()
   Card2_dac_current.setGain(MCP47X6_GAIN_1X);
   Card2_dac_current.saveSettings();
   //Initialize ADC for reading of the current & voltage
-  Wire.begin();
   Card1_ADC.configure(MCP342X_MODE_CONTINUOUS | 
                   MCP342X_CHANNEL_1 |
                   MCP342X_CHANNEL_2 |
@@ -78,7 +80,7 @@ void setup()
   Card1_dac_volt.setOutputLevel(uint16_t (set_volt[0]*DAC_bits/max_volt));
   Card2_dac_current.setOutputLevel(uint16_t (set_current[1]*DAC_bits/max_current));
   Card2_dac_volt.setOutputLevel(uint16_t (set_volt[1]*DAC_bits/max_volt));
-  
+  //end of initialization
 }
 void loop() {
   rotating = true;  // reset the debouncer

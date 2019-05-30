@@ -18,44 +18,14 @@ uint16_t v1_set, v2_set, a1_set, a2_set;
 float vout1 = 0.000, vin1 =0.000, current1 = 0.000, T1 =0.000;
 float vout2 = 0.000, vin2 =0.000, current2 = 0.000, T2 =0.000;
 uint8_t arrow[8] = {0x0, 0x04 ,0x06, 0x1f, 0x06, 0x04, 0x00, 0x00};
-uint8_t ON[8] = {0x18,0x1C,0x1E,0x1F,0x1E,0x1C,0x18,0x00};
-uint8_t OFF[8] = {0x00,0x1F,0x1F,0x1F,0x1F,0x1F,0x1F,0x00};
 float delta =0.10;
-float max_volt = 20.48;
-float min_volt = 0.00;
-float max_current = 2.048;
-float min_current = 0.000;
-float set_current[2] = {0.1,0.1};   //Current settings variable
-float set_volt[2] = {3.000,3.000};    //Current settings variable
+float max_volt = 20.48 , min_volt = 0.00, max_current = 2.048, min_current = 0.000;
+float set_current[2] = {0.1,0.1}, set_volt[2] = {3.000,3.000} ;   //Current settings variable
 
 float cal[4][4];  /* ={{6.103, 11.083, 6.082, 11.043},  //V1 {ref_low, ref_high, raw_low, raw_high}
                   {6.000, 12.000, 6.000, 12.000},  //V2 {ref_low, ref_high, raw_low, raw_high}
                   {6.000, 12.000, 6.000, 12.000},  //a1 {ref_low, ref_high, raw_low, raw_high}
                   {6.000, 12.000, 6.000, 12.000}}; */ //a2 {ref_low, ref_high, raw_low, raw_high}
-
-//calibration of the Voltage 1
-float v1_ref_low = 6.103;
-float v1_ref_high = 11.083;
-float v1_raw_low = 6.082;
-float v1_raw_high = 11.043;
-
-//calibration of the Voltage 2
-float v2_ref_low = 6.000;
-float v2_ref_high = 12.000;
-float v2_raw_low = 6.000;
-float v2_raw_high = 12.000;
-
-//calibration of the Current 1
-float a1_ref_low = 0.000;
-float a1_ref_high = 2.048;
-float a1_raw_low = 0.000;
-float a1_raw_high = 2.048;
-
-//calibration of the Current 2
-float a2_ref_low = 0.000;
-float a2_ref_high = 2.048;
-float a2_raw_low = 0.000;
-float a2_raw_high = 2.048;
 
 //Variables for the menu encoder
 int counter = 0; 
@@ -94,13 +64,13 @@ unsigned int lastReportedPos = 1;   // change management
 static boolean rotating = false;    // debounce management
 boolean A_set = false;            // interrupt service routine vars
 boolean B_set = false;            // interrupt service routine vars
-void doEncoderA();
-void doEncoderB();
-void Summaryscreen();
-float calibration (float rawvalue, int param);
+
+int keypadEntry = 0;
 
 const byte ROWS = 5;
 const byte COLUMNS =4;
+byte rowPins[ROWS] = {13,12,11,10,9}; //connect to row pinout of the keypad
+byte columnPins[COLUMNS] = {5,6,A0,A1}; //connect to column pinout of keypad
 //Define symbols on keypad
 char hexakeys [ROWS][COLUMNS] = {
   {'A','B','#','*'},
@@ -110,11 +80,9 @@ char hexakeys [ROWS][COLUMNS] = {
   {'<','0','>','C'}
 };
 
-byte rowPins[ROWS] = {13,12,11,10,9}; //connect to row pinout of the keypad
-byte columnPins[COLUMNS] = {5,6,A0,A1}; //connect to column pinout of keypad
 //initialize an instance of class NewKeypad
 Keypad Customkeypad = Keypad(makeKeymap (hexakeys),rowPins,columnPins,ROWS, COLUMNS);
-int keypadEntry = 0;
-
-
-void set_calibration (int c);
+void doEncoderA();
+void doEncoderB();
+void Summaryscreen();
+float calibration (float rawvalue, int param);
