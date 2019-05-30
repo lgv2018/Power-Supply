@@ -6,40 +6,41 @@
 #include <MCP342X.h>
 #include <Keypad.h>
 #include <config.h>
+#include <powercard.h>
 
 void setup() 
 {
+  //encoder configuration
   pinMode(encoderPinA, INPUT);
   pinMode(encoderPinB, INPUT);
   digitalWrite(encoderPinA, HIGH); // turn on pullup resistors
   digitalWrite(encoderPinB, HIGH); // turn on pullup resistors
   attachInterrupt(0, doEncoderA, CHANGE);  // encoder pin on interrupt 0 (pin 2)
   attachInterrupt(1, doEncoderB, CHANGE);  // encoder pin on interrupt 1 (pin 3)
-  Serial.begin(9600);
   pinMode (push,INPUT); //Define the pin as input & OUTPUT
+  //end of encoder configuration
+
+  Serial.begin(9600);
   
-  // Read EEPROM settings
-  /* int EEPROM_add = 0;
-  for(i=0;i<2;i++)
+  //Read calibration data from EEPROM
+  int EEPROM_add = 0;
+  for(i=0;i<4;i++)
   { 
     for (j=0;j<4;j++)
     {
-      R[i][j]=EEPROM.read(EEPROM_add);
-      if (R[i][j] >20 || R[i][j] <0) R[i][j] = 10;
-      v_cal[i][j]=EEPROM.read(EEPROM_add+10);
-      if (v_cal[i][j] >20 || v_cal[i][j] <0) v_cal[i][j] = 10;
-      EEPROM_add++;
+      EEPROM.get(EEPROM_add,cal[i][j]);
+      if (cal[i][j] >20 || cal[i][j] <0) cal[i][j] = 10;
+      EEPROM_add += sizeof(cal[i][j]);
     }
   }
- */
-  // Initialize LCD
+
+  //LCD configuration
   lcd.begin();
   lcd.backlight(); 
   lcd.createChar(1, arrow);
-  lcd.createChar(2, ON);
-  lcd.createChar(3, OFF);
-  lcd.clear();
-  lcd.setCursor(0,1);  
+  //end of encoder configuration
+
+  //configuration of power card
   //Initialize DAC1 for setting of the voltage
   Card1_dac_volt.begin();
   Card1_dac_volt.setVReference(MCP47X6_VREF_VREFPIN_BUFFERED);
@@ -61,7 +62,6 @@ void setup()
   Card2_dac_current.setGain(MCP47X6_GAIN_1X);
   Card2_dac_current.saveSettings();
   //Initialize ADC for reading of the current & voltage
-  Wire.begin();
   Card1_ADC.configure(MCP342X_MODE_CONTINUOUS | 
                   MCP342X_CHANNEL_1 |
                   MCP342X_CHANNEL_2 |
@@ -81,7 +81,7 @@ void setup()
   Card1_dac_volt.setOutputLevel(uint16_t (set_volt[0]*DAC_bits/max_volt));
   Card2_dac_current.setOutputLevel(uint16_t (set_current[1]*DAC_bits/max_current));
   Card2_dac_volt.setOutputLevel(uint16_t (set_volt[1]*DAC_bits/max_volt));
-  
+  //end of initialization
 }
 void loop() {
   rotating = true;  // reset the debouncer
@@ -98,7 +98,7 @@ void loop() {
     if(submenu == 0) //Main Menu
     { 
       reset_timer= millis ();
-      max_cnt=2;
+      max_cnt=3;
       if(0 <= counter && counter < 1)
       {
         lcd.clear();
@@ -107,7 +107,9 @@ void loop() {
         lcd.print("Current settings");
         lcd.setCursor(0,1);  
         lcd.print(" Voltage settings");
-        lcd.setCursor(1,2);
+        lcd.setCursor(0,2);
+        lcd.print(" Calibration");
+        lcd.setCursor(1,3);
         lcd.print(Back);
         pushed =0;
         page=1;
@@ -121,7 +123,9 @@ void loop() {
         lcd.setCursor(0,1);
         lcd.write(1);    
         lcd.print("Voltage settings");
-        lcd.setCursor(1,2);
+        lcd.setCursor(0,2);
+        lcd.print(" Calibration");
+        lcd.setCursor(1,3);
         lcd.print(Back);
         pushed = 0;
         page=2;
@@ -135,9 +139,26 @@ void loop() {
         lcd.print(" Voltage settings");
         lcd.setCursor(0,2);
         lcd.write(1);
+        lcd.print("Calibration");
+        lcd.setCursor(1,3);
         lcd.print(Back);
         pushed =0;
         page=3;
+      }
+      if(3 <= counter && counter < 4)
+      {
+        lcd.clear();
+        lcd.setCursor(0,0);
+        lcd.print(" Current settings");
+        lcd.setCursor(0,1);
+        lcd.print(" Voltage settings");
+        lcd.setCursor(0,2);
+        lcd.print(" Calibration");
+        lcd.setCursor(0,3);
+        lcd.write(1);
+        lcd.print(Back);
+        pushed =0;
+        page=4;
       }
     }//submenu = 0;
 
@@ -255,8 +276,90 @@ void loop() {
 
     }//submenu = 2;
 
+    if(submenu == 3) //calibration Menu
+    { 
+      reset_timer= millis ();
+      max_cnt=3;
+      if(0 <= counter && counter < 1)
+      {
+        lcd.clear();
+        lcd.setCursor(0,0);
+        lcd.write(1);  
+        lcd.print("V1_ref_low =");
+        lcd.setCursor(0,1);  
+        lcd.print(" V1_ref_high=");
+        lcd.setCursor(0,2);
+        lcd.print(" V1_raw_low =");
+        lcd.setCursor(0,3);
+        lcd.print(" V1_raw_high=");
+        pushed =0;
+        page=1;
+      }
+      if(1 <= counter && counter < 2)
+      {
+        
+        lcd.clear();
+        lcd.setCursor(0,0);
+        lcd.print(" V1_ref_low =");
+        lcd.setCursor(0,1);
+        lcd.write(1);    
+        lcd.print("V1_ref_high=");
+        lcd.setCursor(0,2);
+        lcd.print(" V1_raw_low =");
+        lcd.setCursor(0,3);
+        lcd.print(" V1_raw_high=");
+        pushed = 0;
+        page=2;
+      }
+      if(2 <= counter && counter < 3)
+      {
+        lcd.clear();
+        lcd.setCursor(0,0);
+        lcd.print(" V1_ref_low =");
+        lcd.setCursor(0,1);
+        lcd.print(" V1_ref_high=");
+        lcd.setCursor(0,2);
+        lcd.write(1);
+        lcd.print("V1_raw_low =");
+        lcd.setCursor(0,3);
+        lcd.print(" V1_raw_high=");
+        pushed =0;
+        page=3;
+      }
+      if(3 <= counter && counter < 4)
+      {
+        lcd.clear();
+        lcd.clear();
+        lcd.setCursor(0,0);
+        lcd.print(" V1_ref_low =");
+        lcd.setCursor(0,1);
+        lcd.print(" V1_ref_high=");
+        lcd.setCursor(0,2);
+        lcd.print(" V1_raw_low =");
+        lcd.setCursor(0,3);
+        lcd.write(1);
+        lcd.print("V1_raw_high=");
+        pushed =0;
+        page=4;
+      }
+      if(page <=4)
+      {
+        lcd.setCursor(14,0);
+        lcd.print(cal[0][0],3);
+        lcd.setCursor(14,1);
+        lcd.print(cal[0][1],3);
+        lcd.setCursor(14,2);
+        lcd.print(cal[0][2],3);
+        lcd.setCursor(14,3);
+        lcd.print(cal[0][3],3);
+        delay(10);
+      }
+      delay(100);
+    }//submenu = 3;
+
     last_counter = counter; //Save the value of the last state
    }
+
   if(!digitalRead(push) || keypadEntry){
     delay(100);
     if(submenu == 0 && Ready==1) //Main Menu
@@ -280,6 +383,15 @@ void loop() {
        }
     
        if(page==3)
+       {
+        submenu=3;
+        counter=0;
+        pushed=1;
+        delay(100);
+        goto Start;
+       }
+
+       if(page==4)
        {
         submenu=0;
         counter=0;
@@ -405,9 +517,7 @@ void loop() {
             vout1 = vout1_adc*max_volt/ADC_bits;
             lcd.setCursor(15,2);
             if(calibration(vout1,1)<10.0) lcd.print(calibration(vout1,1),3);
-            if(calibration(vout1,1)>=10.0) {lcd.print(calibration(vout1,1),2);
-            Serial.print(calibration(vout1,1),3);
-            Serial.print("\n");}
+            if(calibration(vout1,1)>=10.0) lcd.print(calibration(vout1,1),2);
           }
           if(page==2)
           {
@@ -480,6 +590,144 @@ void loop() {
         delay(DL);
        }
     }//end of submenu 2
+    if(submenu == 3) //Calibration menu
+    { 
+      counter = 0;
+      lastctr = 0;
+       if(page==1 || page==2 || page==3 || page==4 )
+       {
+         int COL = 0;
+         int ROW = 0; //lcd Row
+         int ROW1 = 0; //array row
+         counter = 0;
+         for(i=0; i <=3; i++)
+         {
+          if (page==(i+1))
+          {
+            COL =i;
+            ROW =i;
+          }
+         }
+         lcd.setCursor(0,ROW);
+         lcd.print(" ");
+         do
+         {
+          if(counter != lastctr)
+          {
+            if (counter > lastctr) cal[ROW1][COL] = cal[ROW1][COL]+delta;
+            if (counter < lastctr) cal[ROW1][COL] = cal[ROW1][COL]-delta;
+            if (cal[ROW1][COL]>20) cal[ROW1][COL]= 20;
+            if (cal[ROW1][COL]<0) cal[ROW1][COL]= 0;
+          }
+          lcd.setCursor(13,ROW);
+          lcd.write(1);
+          lcd.print(cal[ROW1][COL],3);
+          lastctr = counter;
+          //delay(100); //important for debouncing of encoder push switch
+          char customkey1 = Customkeypad.getKey();
+          if(customkey1 == '<') delta=delta*10;
+          if(customkey1 == '>') delta=delta/10;
+          if(customkey1 == '1') ROW1 = 0;
+          if(customkey1 == '2') ROW1 = 1;
+          if(customkey1 == '3') ROW1 = 2;
+          if(customkey1 == '4') ROW1 = 3;
+          if(customkey1 == 'D'){ 
+            for (int i = 0; i < 4; i++)
+            {
+              lcd.setCursor(13,i);
+              lcd.print(' ');
+            }
+            ROW++;
+            COL++;
+            if (ROW > 3) ROW = 0;
+            if (COL > 3) COL = 0;
+          }
+          if(customkey1 == 'U'){ 
+            for (int i = 0; i < 4; i++)
+            {
+              lcd.setCursor(13,i);
+              lcd.print(' ');
+            }
+            ROW--;
+            COL--;
+            if (ROW < 0) ROW = 3;
+            if (COL < 0) COL = 3;
+          }
+          if(customkey1 == '<'){
+            ROW1--;
+            if (ROW1 < 0) ROW1 = 3;
+          }
+          if(customkey1 == '>'){
+            ROW1++;
+            if (ROW1 > 3) ROW1 = 0;
+          }
+          if(customkey1 == 'E'){
+            last_counter = 0;
+            counter=0;
+            pushed=0;
+            Ready=0;
+            submenu =0;
+            keypadEntry = 0;
+            menu =0;
+            goto Start;
+          }
+          if(customkey1 == 'C'){
+            int EEPROM_add = 0;
+            for(i=0;i<4;i++)
+            { 
+              for (j=0;j<4;j++)
+              {
+                EEPROM.put(EEPROM_add, cal[i][j]);
+                EEPROM_add += sizeof(cal[i][j]);
+              }
+            }
+            goto Start;
+          } 
+          switch (ROW1)
+          {
+          case 0:
+            for (int i = 0; i < 4; i++)
+            {
+              lcd.setCursor(1,i);
+              lcd.print("V1");
+            }
+            break;
+          case 1:
+            for (int i = 0; i < 4; i++)
+            {
+              lcd.setCursor(1,i);
+              lcd.print("V2");
+            }
+            break;
+          case 2:
+            for (int i = 0; i < 4; i++)
+            {
+              lcd.setCursor(1,i);
+              lcd.print("A1");
+            }
+            break;
+          case 3:
+            for (int i = 0; i < 4; i++)
+            {
+              lcd.setCursor(1,i);
+              lcd.print("A2");
+            }
+            break;
+          default:
+            break;
+          }
+          lcd.setCursor(14,0);
+          lcd.print(cal[ROW1][0],3);
+          lcd.setCursor(14,1);
+          lcd.print(cal[ROW1][1],3);
+          lcd.setCursor(14,2);
+          lcd.print(cal[ROW1][2],3);
+          lcd.setCursor(14,3);
+          lcd.print(cal[ROW1][3],3);
+          delay(10);
+         }while(1);
+       }
+    }//end of submenu 3
   }
 
   if (millis() - reset_timer > summary_delay)
@@ -487,6 +735,17 @@ void loop() {
     menu = 0;
   }
 
+  if(Customkeypad.getKey() == 'E')
+    {
+      last_counter = 0;
+      counter=0;
+      pushed=0;
+      Ready=0;
+      submenu =0;
+      keypadEntry = 0;
+      menu =0;
+      goto Start;
+    }
   //Add limit for the counter. Each line of the menu has 2 points. Since my menu has 5 lines the maximum counter will be from 0 to 10
   if(counter > max_cnt) counter=0;
   if(counter < 0) counter=max_cnt;  
@@ -528,8 +787,7 @@ void Summaryscreen(){
         //Printing Variable portion of screen 
         do {
         //Reading from ADC of Card1
-        char customkey =Customkeypad.getKey();
-        //Serial.print(customkey);
+        char customkey = Customkeypad.getKey();
         switch (customkey)
         {
         case '1': // change current setting of the card 1
@@ -572,7 +830,26 @@ void Summaryscreen(){
           return;
           break;
         case '*':
-          //Card1_dac_volt.setOutputLevel(uint16_t ((set_volt[0] + (set_volt[0]+2.0-(vout1+cal_volt1)))*DAC_bits/max_volt));
+          lcd.clear();
+          lcd.setCursor(1,1);
+          lcd.print ("Entering calibration..");
+          do
+          {
+            switch (Customkeypad.getKey())
+            {
+            case '1':
+              counter = 0;
+              last_counter = 0;
+              submenu = 3;
+              pushed = 1;
+              menu = 1;
+              return;
+              break;
+            default:
+              break;
+            }
+          } while (1);
+          
           break;
 
         default:
@@ -623,30 +900,28 @@ void Summaryscreen(){
 }
 
 float calibration (float rawvalue, int param){
-  
   float corrected_value;
   switch (param)
   {
   case 1:
     //corrected_value = rawvalue;
-    corrected_value = ((((rawvalue - v1_raw_low) * (v1_ref_high - v1_ref_low )) / (v1_raw_high - v1_raw_low) ) + v1_ref_low);
+    corrected_value = ((((rawvalue - cal[0][2]) * (cal[0][1] - cal[0][0])) / (cal[0][3] - cal[0][2])) + cal[0][0]);
     return corrected_value;
     break;
   case 2:
-    corrected_value = ((((rawvalue - v2_raw_low) * (v2_ref_high - v2_ref_low )) / (v2_raw_high - v2_raw_low) ) + v2_ref_low);
+    corrected_value = ((((rawvalue - cal[1][2]) * (cal[1][1] - cal[1][0])) / (cal[1][3] - cal[1][2])) + cal[1][0]);
     return corrected_value;
     break;
   case 3:
-    corrected_value = ((((rawvalue - a1_raw_low) * (a1_ref_high - a1_ref_low )) / (a1_raw_high - a1_raw_low) ) + a1_ref_low);
+    corrected_value = ((((rawvalue - cal[2][2]) * (cal[2][1] - cal[2][0])) / (cal[2][3] - cal[2][2])) + cal[2][0]);
     return corrected_value;
     break;
   case 4:
-    corrected_value = ((((rawvalue - a2_raw_low) * (a2_ref_high - a2_ref_low )) / (a2_raw_high - a2_raw_low) ) + a2_ref_low);
+    corrected_value = ((((rawvalue - cal[3][2]) * (cal[3][1] - cal[3][0])) / (cal[3][3] - cal[3][2])) + cal[3][0]);
     return corrected_value;
     break;
   default:
     return rawvalue;
     break;
   }
-
 }
