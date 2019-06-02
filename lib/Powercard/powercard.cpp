@@ -13,6 +13,7 @@ void powercard::begin(){
     dac_volt = MCP47X6 (volt_add);
     dac_current = MCP47X6 (curr_add);
     ADC_measure = MCP342X (adc_add);
+    port_expander.begin(IO_add);
 
     dac_volt.begin();
     dac_volt.setVReference(MCP47X6_VREF_VREFPIN_BUFFERED);
@@ -30,7 +31,21 @@ void powercard::begin(){
                   MCP342X_CHANNEL_3 |
                   MCP342X_CHANNEL_4 |
                   MCP342X_SIZE_16BIT |
-                  MCP342X_GAIN_1X);   
+                  MCP342X_GAIN_1X); 
+    //GPIO PINMODE CONFIGURATION
+    port_expander.pinMode(0, OUTPUT);   //Output off
+    port_expander.pinMode(1, INPUT);    //CV_ON
+    port_expander.pinMode(2, INPUT);    //CC_ON
+    port_expander.pinMode(3, OUTPUT);   //ADC READBACK VA
+    port_expander.pinMode(4, OUTPUT);   //ADC READBACK ON
+    port_expander.pinMode(5, INPUT);    //CHG_Pump
+    //GPIO pullUP CONFIGURATION FOR INPUTS
+    port_expander.pullUp (1,HIGH);
+    port_expander.pullUp (2,HIGH);
+    port_expander.pullUp (5,HIGH);
+    //GPIO OUTPUT_OFF By default
+    port_expander.digitalWrite(0, HIGH); //output is off by default
+
 }
 
 float powercard::read(int p){
@@ -80,3 +95,29 @@ void powercard::write(float set, int j){
         break;
     }
 }
+
+void powercard::power_on (){
+    port_expander.digitalWrite(0, LOW); // card (DAC output) is on when Pin 0 i.e. OUTPUT_OFF is LOW 
+}
+void powercard::power_off (){
+    port_expander.digitalWrite(0, HIGH); // card (DAC output) is OFF when Pin 0 i.e. OUTPUT_OFF is HIGH
+}
+
+void powercard::measure_dac_volt_on (){
+    port_expander.digitalWrite(4, HIGH); // ADC readback is on when pin 4 i.e.ADC_READBACK_ON is HIGH
+    port_expander.digitalWrite(3, LOW); // voltage is measured when pin 3 i.e.ADC_READBACK_VA is LOW
+}
+
+void powercard::measure_dac_volt_off (){
+    port_expander.digitalWrite(4, LOW); // ADC readback is off when pin 4 i.e.ADC_READBACK_ON is LOW
+}
+
+void powercard::measure_dac_curr_on (){
+    port_expander.digitalWrite(4, HIGH); // ADC readback is on when pin 4 i.e.ADC_READBACK_ON is HIGH
+    port_expander.digitalWrite(3, HIGH); // current is measured when pin 3 i.e.ADC_READBACK_VA is HIGH
+}
+
+void powercard::measure_dac_curr_off (){
+    port_expander.digitalWrite(4, LOW); // ADC readback is off when pin 4 i.e.ADC_READBACK_ON is LOW
+}
+

@@ -24,7 +24,14 @@ public:
     MCP47X6 dac_volt;
     MCP47X6 dac_current;
     MCP342X ADC_measure;
+    MCP23008 port_expander;
     void begin ();
     float read(int p);
     void write (float set, int j);
+    void power_on ();
+    void power_off ();
+    void measure_dac_volt_on ();
+    void measure_dac_volt_off ();
+    void measure_dac_curr_on ();
+    void measure_dac_curr_off ();
 };

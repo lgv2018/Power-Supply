@@ -5,8 +5,10 @@
 #include <config.h>
 #include <powercard.h>
 
-powercard card1 = powercard(0x60, 0x61, 0x68, 0x00);
-powercard card2 = powercard(0x62, 0x63, 0x6F, 0x00);
+//Defination of the powecard devices
+powercard card1 = powercard(0x60, 0x61, 0x68, 0x20);
+powercard card2 = powercard(0x62, 0x63, 0x6F, 0x21);
+
 
 void setup() 
 {

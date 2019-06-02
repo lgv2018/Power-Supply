@@ -1,15 +1,17 @@
 //Defination of I2C devices
 LiquidCrystal_I2C lcd(0x27,20,4);
 
+
 //Variables for LCD
 String voltage_h = "Volt(H):";
 String voltage_L = "Volt(L):";
 String R1 = "R1=";
 String R2 = "R2=";
 String Back = "Back";
+String Current_settings = "Current settings";
+String Voltage_settings = "Voltage settings";
+String calibration_str = "Calibration";
 
-int v1_set_raw, v2_set_raw, a1_set_raw, a2_set_raw;
-uint16_t v1_set, v2_set, a1_set, a2_set;
 float vout1 = 0.000, vin1 =0.000, current1 = 0.000, T1 =0.000;
 float vout2 = 0.000, vin2 =0.000, current2 = 0.000, T2 =0.000;
 uint8_t arrow[8] = {0x0, 0x04 ,0x06, 0x1f, 0x06, 0x04, 0x00, 0x00};
@@ -36,7 +38,6 @@ int j;
 int lastctr = 0;
 int max_cnt =10;
 int min_cnt =0;
-
 volatile unsigned int encoderPos = 0;  // a counter for the dial
 unsigned int lastReportedPos = 1;   // change management
 static boolean rotating = false;    // debounce management
@@ -66,9 +67,10 @@ char hexakeys [ROWS][COLUMNS] = {
   {'<','0','>','C'}
 };
 
-//initialize an instance of class NewKeypad
-Keypad Customkeypad = Keypad(makeKeymap (hexakeys),rowPins,columnPins,ROWS, COLUMNS);
+//function
 void doEncoderA();
 void doEncoderB();
 void Summaryscreen();
+//Defination of the keypad
+Keypad Customkeypad = Keypad(makeKeymap (hexakeys),rowPins,columnPins,ROWS, COLUMNS);
 float calibration (float rawvalue, int param);
