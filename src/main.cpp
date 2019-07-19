@@ -1,12 +1,14 @@
 #include <Arduino.h>
-#include <Wire.h>
 #include <LiquidCrystal_I2C.h>
 #include <EEPROM.h>
-#include <MCP47X6.h>
-#include <MCP342X.h>
 #include <Keypad.h>
 #include <config.h>
 #include <powercard.h>
+
+//Defination of the powecard
+powercard card1 = powercard(0x60, 0x61, 0x68, 0x20);
+powercard card2 = powercard(0x62, 0x63, 0x6F, 0x21);
+
 
 void setup() 
 {
@@ -19,9 +21,13 @@ void setup()
   attachInterrupt(1, doEncoderB, CHANGE);  // encoder pin on interrupt 1 (pin 3)
   pinMode (push,INPUT); //Define the pin as input & OUTPUT
   //end of encoder configuration
-
   Serial.begin(9600);
-  
+
+  //PWM frequency for card1 of 980Hz 
+  pinMode(CHG_pump_card1,OUTPUT);
+  pinMode(CHG_pump_card2,OUTPUT);
+  analogWrite(CHG_pump_card1,127);
+  analogWrite(CHG_pump_card2,127);
   //Read calibration data from EEPROM
   int EEPROM_add = 0;
   for(i=0;i<4;i++)
@@ -36,51 +42,19 @@ void setup()
 
   //LCD configuration
   lcd.begin();
-  lcd.backlight(); 
+  lcd.backlight();
   lcd.createChar(1, arrow);
   //end of encoder configuration
 
   //configuration of power card
-  //Initialize DAC1 for setting of the voltage
-  Card1_dac_volt.begin();
-  Card1_dac_volt.setVReference(MCP47X6_VREF_VREFPIN_BUFFERED);
-  Card1_dac_volt.setGain(MCP47X6_GAIN_1X);
-  Card1_dac_volt.saveSettings();
-  // Initialize DAC1 for setting of the current
-  Card1_dac_current.begin();
-  Card1_dac_current.setVReference(MCP47X6_VREF_VREFPIN_BUFFERED);
-  Card1_dac_current.setGain(MCP47X6_GAIN_1X);
-  Card1_dac_current.saveSettings();
-  // Initialize DAC2 for setting of the voltage
-  Card2_dac_volt.begin();
-  Card2_dac_volt.setVReference(MCP47X6_VREF_VREFPIN_BUFFERED);
-  Card2_dac_volt.setGain(MCP47X6_GAIN_1X);
-  Card2_dac_volt.saveSettings();
-  // Initialize DAC2 for setting of the current
-  Card2_dac_current.begin();
-  Card2_dac_current.setVReference(MCP47X6_VREF_VREFPIN_BUFFERED);
-  Card2_dac_current.setGain(MCP47X6_GAIN_1X);
-  Card2_dac_current.saveSettings();
-  //Initialize ADC for reading of the current & voltage
-  Card1_ADC.configure(MCP342X_MODE_CONTINUOUS | 
-                  MCP342X_CHANNEL_1 |
-                  MCP342X_CHANNEL_2 |
-                  MCP342X_CHANNEL_3 |
-                  MCP342X_CHANNEL_4 |
-                  MCP342X_SIZE_16BIT |
-                  MCP342X_GAIN_1X);
-  Card2_ADC.configure(MCP342X_MODE_CONTINUOUS | 
-                  MCP342X_CHANNEL_1 |
-                  MCP342X_CHANNEL_2 |
-                  MCP342X_CHANNEL_3 |
-                  MCP342X_CHANNEL_4 |
-                  MCP342X_SIZE_16BIT |
-                  MCP342X_GAIN_1X);
-
-  Card1_dac_current.setOutputLevel(uint16_t (set_current[0]*DAC_bits/max_current));
-  Card1_dac_volt.setOutputLevel(uint16_t (set_volt[0]*DAC_bits/max_volt));
-  Card2_dac_current.setOutputLevel(uint16_t (set_current[1]*DAC_bits/max_current));
-  Card2_dac_volt.setOutputLevel(uint16_t (set_volt[1]*DAC_bits/max_volt));
+  //Initialize card1
+  card1.begin();
+  // Initialize card2
+  card2.begin();
+  card1.write(set_current[0],1);
+  card1.write(set_volt[0],0);
+  card2.write(set_current[1],1);
+  card2.write(set_volt[1],0);
   //end of initialization
 }
 void loop() {
@@ -266,11 +240,11 @@ void loop() {
       if(page <=3)
       {
         lcd.setCursor(15,0);
-        if(set_volt[0]+2.0<10.0) lcd.print((set_volt[0]+2.0),3);
-        if(set_volt[0]+2.0>=10.0) lcd.print((set_volt[0]+2.0),2);
+        if(set_volt[0]<10.0) lcd.print(set_volt[0],3);
+        if(set_volt[0]>=10.0) lcd.print(set_volt[0],2);
         lcd.setCursor(15,1);
-        if(set_volt[1]+2.0<10.0) lcd.print((set_volt[1]+2.0),3);
-        if(set_volt[1]+2.0>=10.0) lcd.print((set_volt[1]+2.0),2);
+        if(set_volt[1]<10.0) lcd.print(set_volt[1],3);
+        if(set_volt[1]>=10.0) lcd.print(set_volt[1],2);
         delay(10);
       } 
 
@@ -405,6 +379,8 @@ void loop() {
     { 
       counter = 0;
       lastctr = 0;
+      lcd.setCursor(9,2);
+      lcd.print("Iact= " );  
       lcd.setCursor(8,3);
       lcd.print("Delta= " );
        if(page==1 || page==2 )
@@ -424,7 +400,21 @@ void loop() {
          lcd.print(" ");
          do
          {
-          if(delta>=10) delta =1;
+          if(page==1)
+          {
+            current1 = card1.read(1);
+            lcd.setCursor(15,2);
+            if(calibration(current1,3)<10.0) lcd.print(calibration(current1,3),3);
+            if(calibration(current1,3)>=10.0) lcd.print(calibration(current1,3),2);
+          }
+          if(page==2)
+          {
+            current2 = card2.read(1);
+            lcd.setCursor(15,2);
+            if(calibration(current2,4)<10.0) lcd.print(calibration(current2,4),3);
+            if(calibration(current2,4)>=10.0) lcd.print(calibration(current2,4),2);
+          }
+          if(delta>=1) delta =0.100;
           if(delta<0.001) delta =0.001;
           lcd.setCursor(15,3);
           lcd.print(delta,3); 
@@ -440,10 +430,10 @@ void loop() {
           switch (page)
           {
             case 1:
-              Card1_dac_current.setOutputLevel(uint16_t (set_current[COL]*DAC_bits/max_current));
+              card1.write(set_current[COL],1);
               break;
             case 2:
-              Card2_dac_current.setOutputLevel(uint16_t (set_current[COL]*DAC_bits/max_current));
+              card2.write(set_current[COL],1);
               break;
           }
           lcd.print(set_current[COL],3);
@@ -512,23 +502,19 @@ void loop() {
          {
           if(page==1)
           {
-            Card1_ADC.startConversion(MCP342X_CHANNEL_1);
-            Card1_ADC.getResult(&vout1_adc);
-            vout1 = vout1_adc*max_volt/ADC_bits;
+            vout1 = card1.read(0);
             lcd.setCursor(15,2);
             if(calibration(vout1,1)<10.0) lcd.print(calibration(vout1,1),3);
             if(calibration(vout1,1)>=10.0) lcd.print(calibration(vout1,1),2);
           }
           if(page==2)
           {
-            Card2_ADC.startConversion(MCP342X_CHANNEL_1);
-            Card2_ADC.getResult(&vout2_adc);
-            vout2 = vout2_adc*max_volt/ADC_bits;
+            vout2 = card2.read(0);
             lcd.setCursor(15,2);
             if(calibration(vout2,2)<10.0) lcd.print(calibration(vout2,2),3);
             if(calibration(vout2,2)>=10.0) lcd.print(calibration(vout2,2),2);
           }
-          if(delta>=10) delta =1;
+          if(delta>=10) delta =1.000;
           if(delta<0.001) delta =0.001;
           lcd.setCursor(15,3);
           lcd.print(delta,3); 
@@ -544,14 +530,14 @@ void loop() {
           switch (page)
           {
             case 1:
-              Card1_dac_volt.setOutputLevel(uint16_t (set_volt[COL]*DAC_bits/max_volt));
+              card1.write(set_volt[COL],0);
               break;
             case 2:
-              Card2_dac_volt.setOutputLevel(uint16_t (set_volt[COL]*DAC_bits/max_volt));
+              card2.write(set_volt[COL],0);
               break;
           }
-          if(set_volt[COL]+2.0<10.0) lcd.print((set_volt[COL]+2.0),3);
-          if(set_volt[COL]+2.0>=10.0) lcd.print((set_volt[COL]+2.0),2);
+          if(set_volt[COL]<10.0) lcd.print(set_volt[COL],3);
+          if(set_volt[COL]>=10.0) lcd.print(set_volt[COL],2);
           lastctr = counter;
           delay(100); //important for debouncing of encoder push switch
           char customkey1 =Customkeypad.getKey();
@@ -652,14 +638,6 @@ void loop() {
             COL--;
             if (ROW < 0) ROW = 3;
             if (COL < 0) COL = 3;
-          }
-          if(customkey1 == '<'){
-            ROW1--;
-            if (ROW1 < 0) ROW1 = 3;
-          }
-          if(customkey1 == '>'){
-            ROW1++;
-            if (ROW1 > 3) ROW1 = 0;
           }
           if(customkey1 == 'E'){
             last_counter = 0;
@@ -856,38 +834,28 @@ void Summaryscreen(){
           break;
         } 
         
-        Card1_ADC.startConversion(MCP342X_CHANNEL_1);
-        Card1_ADC.getResult(&vout1_adc);
-        vout1 = vout1_adc*max_volt/ADC_bits;
-        Card1_ADC.startConversion(MCP342X_CHANNEL_2);
-        Card1_ADC.getResult(&current1_adc);
-        current1 = current1_adc*max_current/ADC_bits;
-        Card1_ADC.startConversion(MCP342X_CHANNEL_3);
-        Card1_ADC.getResult(&vin1_adc);
-        vin1 = vin1_adc*max_volt*4/ADC_bits;
-        Card1_ADC.startConversion(MCP342X_CHANNEL_4);
-        Card1_ADC.getResult(&T1_adc);
-        T1 = ((T1_adc*max_current/ADC_bits)-0.5)*100;
+        unsigned long currentMillis = millis();
+        if ((currentMillis - lastmilis > 1000))
+        {
+          lastmilis = currentMillis;
+          //Reading from ADC of Card2
+          vout1 = card1.read(0);
+          current1 = card1.read(1);
+          vin1 = card1.read(2);
+          T1 = card1.read(3);
 
-        //Reading from ADC of Card2
-        Card2_ADC.startConversion(MCP342X_CHANNEL_1);
-        Card2_ADC.getResult(&vout2_adc);
-        vout2 = vout2_adc*max_volt/ADC_bits;
-        Card2_ADC.startConversion(MCP342X_CHANNEL_2);
-        Card2_ADC.getResult(&current2_adc);
-        current2 = current2_adc*max_current/ADC_bits;
-        Card2_ADC.startConversion(MCP342X_CHANNEL_3);
-        Card2_ADC.getResult(&vin2_adc);
-        vin2 = vin2_adc*max_volt*4/ADC_bits;
-        Card2_ADC.startConversion(MCP342X_CHANNEL_4);
-        Card2_ADC.getResult(&T2_adc);
-        T2 = ((T2_adc*max_current/ADC_bits)-0.5)*100;
-        
-        //Printing all data 
-        lcd.setCursor(4,0);lcd.print(calibration(vout1,1),3);lcd.setCursor(14,0);lcd.print(calibration(current1,3),3);lcd.print(" ");
-        lcd.setCursor(4,1);lcd.print(vin1,2);lcd.setCursor(14,1);lcd.print(T1,1);lcd.print(" ");
-        lcd.setCursor(4,2);lcd.print(calibration(vout2,2),3);lcd.setCursor(14,2);lcd.print(calibration(current2,4),3);lcd.print(" ");
-        lcd.setCursor(4,3);lcd.print(vin2,2);lcd.setCursor(14,3);lcd.print(T2,1);lcd.print(" ");
+          //Reading from ADC of Card2
+          vout2 = card2.read(0);
+          current2 = card2.read(1);
+          vin2 = card2.read(2);
+          T2 = card2.read(3);
+
+          //Printing all data 
+          lcd.setCursor(4,0);lcd.print(calibration(vout1,1),3);lcd.setCursor(14,0);lcd.print(calibration(current1,3),3);lcd.print(" ");
+          lcd.setCursor(4,1);lcd.print(vin1,2);lcd.setCursor(14,1);lcd.print(T1,1);lcd.print(" ");
+          lcd.setCursor(4,2);lcd.print(calibration(vout2,2),3);lcd.setCursor(14,2);lcd.print(calibration(current2,4),3);lcd.print(" ");
+          lcd.setCursor(4,3);lcd.print(vin2,2);lcd.setCursor(14,3);lcd.print(T2,1);lcd.print(" ");
+        }
         if((last_counter > counter) || (last_counter < counter))
         {
           last_counter = counter;
@@ -903,20 +871,46 @@ float calibration (float rawvalue, int param){
   float corrected_value;
   switch (param)
   {
-  case 1:
+  case 1: //voltage card 1 i.e. V1
     //corrected_value = rawvalue;
     corrected_value = ((((rawvalue - cal[0][2]) * (cal[0][1] - cal[0][0])) / (cal[0][3] - cal[0][2])) + cal[0][0]);
     return corrected_value;
     break;
-  case 2:
+  case 2: //voltage card 2 i.e. V2
     corrected_value = ((((rawvalue - cal[1][2]) * (cal[1][1] - cal[1][0])) / (cal[1][3] - cal[1][2])) + cal[1][0]);
     return corrected_value;
     break;
-  case 3:
+  case 3: //current card 1 i.e. a1
     corrected_value = ((((rawvalue - cal[2][2]) * (cal[2][1] - cal[2][0])) / (cal[2][3] - cal[2][2])) + cal[2][0]);
     return corrected_value;
     break;
-  case 4:
+  case 4: //current card 2 i.e. a2
+    corrected_value = ((((rawvalue - cal[3][2]) * (cal[3][1] - cal[3][0])) / (cal[3][3] - cal[3][2])) + cal[3][0]);
+    return corrected_value;
+    break;
+  default:
+    return rawvalue;
+    break;
+  }
+}
+float calibration_DAC (float rawvalue, int param){
+  float corrected_value;
+  switch (param)
+  {
+  case 1: //voltage card 1 i.e. V1
+    //corrected_value = rawvalue;
+    corrected_value = ((((rawvalue - cal[0][2]) * (cal[0][1] - cal[0][0])) / (cal[0][3] - cal[0][2])) + cal[0][0]);
+    return corrected_value;
+    break;
+  case 2: //voltage card 2 i.e. V2
+    corrected_value = ((((rawvalue - cal[1][2]) * (cal[1][1] - cal[1][0])) / (cal[1][3] - cal[1][2])) + cal[1][0]);
+    return corrected_value;
+    break;
+  case 3: //current card 1 i.e. a1
+    corrected_value = ((((rawvalue - cal[2][2]) * (cal[2][1] - cal[2][0])) / (cal[2][3] - cal[2][2])) + cal[2][0]);
+    return corrected_value;
+    break;
+  case 4: //current card 2 i.e. a2
     corrected_value = ((((rawvalue - cal[3][2]) * (cal[3][1] - cal[3][0])) / (cal[3][3] - cal[3][2])) + cal[3][0]);
     return corrected_value;
     break;

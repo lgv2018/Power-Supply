@@ -15,8 +15,8 @@
   Release as part of the Adafruit library, under the same license.
  ****************************************************/
 
-#ifndef _ADAFRUIT_MCP23008_H
-#define _ADAFRUIT_MCP23008_H
+#ifndef _MCP23008_H
+#define _MCP23008_H
 // Don't forget the Wire library
 #ifdef __AVR_ATtiny85__
   #include <TinyWireM.h>
@@ -24,7 +24,7 @@
   #include <Wire.h>
 #endif
 
-class Adafruit_MCP23008 {
+class MCP23008 {
 public:
   void begin(uint8_t addr);
   void begin(void);

@@ -51,6 +51,7 @@
  */
 MCP342X::MCP342X() {
     devAddr = MCP342X_DEFAULT_ADDRESS;
+    
 }
 
 /******************************************
@@ -61,6 +62,7 @@ MCP342X::MCP342X() {
  */
 MCP342X::MCP342X(uint8_t address) {
     devAddr = address;
+
 }
 
 /******************************************
