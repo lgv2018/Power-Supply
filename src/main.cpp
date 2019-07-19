@@ -835,8 +835,11 @@ void Summaryscreen(){
         } 
         
         unsigned long currentMillis = millis();
+        
         if ((currentMillis - lastmilis > 1000))
         {
+          Serial.println(currentMillis);
+          Serial.println("inside");
           lastmilis = currentMillis;
           //Reading from ADC of Card2
           vout1 = card1.read(0);
