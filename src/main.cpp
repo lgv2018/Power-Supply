@@ -28,7 +28,7 @@ void setup()
   pinMode(CHG_pump_card2,OUTPUT);
   analogWrite(CHG_pump_card1,127);
   analogWrite(CHG_pump_card2,127);
-  //Read calibration data from EEPROM
+  //Read calibration data from EEPROM 
   int EEPROM_add = 0;
   for(i=0;i<4;i++)
   { 
