@@ -78,3 +78,5 @@ Keypad Customkeypad = Keypad(makeKeymap (hexakeys),rowPins,columnPins,ROWS, COLU
 float calibration (float rawvalue, int param);
 
 uint32_t lastmilis=0;
+
+int ROW1 = 0; //array row for calibration menu.

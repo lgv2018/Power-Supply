@@ -318,15 +318,54 @@ void loop() {
       }
       if(page <=4)
       {
-        lcd.setCursor(14,0);
-        lcd.print(cal[0][0],3);
-        lcd.setCursor(14,1);
-        lcd.print(cal[0][1],3);
-        lcd.setCursor(14,2);
-        lcd.print(cal[0][2],3);
-        lcd.setCursor(14,3);
-        lcd.print(cal[0][3],3);
-        delay(10);
+        int p = 0;
+        switch (ROW1)
+        {
+        case 0:
+          for (int i = 0; i < 4; i++)
+            {
+              lcd.setCursor(1,i);
+              lcd.print("V1");
+            }
+          p = 0;
+          break;
+        case 1:
+          for (int i = 0; i < 4; i++)
+            {
+              lcd.setCursor(1,i);
+              lcd.print("V2");
+            }
+          p = 1;
+          break;
+        case 2:
+          for (int i = 0; i < 4; i++)
+            {
+              lcd.setCursor(1,i);
+              lcd.print("A1");
+            }
+          p = 2;
+          break;
+        case 3:
+          for (int i = 0; i < 4; i++)
+            {
+              lcd.setCursor(1,i);
+              lcd.print("A2");
+            }
+          p = 3;
+          break;
+        
+        default:
+          break;
+        }
+          lcd.setCursor(14,0);
+          lcd.print(cal[p][0],3);
+          lcd.setCursor(14,1);
+          lcd.print(cal[p][1],3);
+          lcd.setCursor(14,2);
+          lcd.print(cal[p][2],3);
+          lcd.setCursor(14,3);
+          lcd.print(cal[p][3],3);
+          delay(10);/* code */
       }
       delay(100);
     }//submenu = 3;
@@ -584,7 +623,6 @@ void loop() {
        {
          int COL = 0;
          int ROW = 0; //lcd Row
-         int ROW1 = 0; //array row
          counter = 0;
          for(i=0; i <=3; i++)
          {
@@ -821,6 +859,34 @@ void Summaryscreen(){
               submenu = 3;
               pushed = 1;
               menu = 1;
+              ROW1 = 0;
+              return;
+              break;
+            case '2':
+              counter = 0;
+              last_counter = 0;
+              submenu = 3;
+              pushed = 1;
+              menu = 1;
+              ROW1 = 1;
+              return;
+              break;
+            case '3':
+              counter = 0;
+              last_counter = 0;
+              submenu = 3;
+              pushed = 1;
+              menu = 1;
+              ROW1 = 2;
+              return;
+              break;
+            case '4':
+              counter = 0;
+              last_counter = 0;
+              submenu = 3;
+              pushed = 1;
+              menu = 1;
+              ROW1 = 3;
               return;
               break;
             default:
@@ -850,7 +916,7 @@ void Summaryscreen(){
           //Reading from ADC of Card2
           vout2 = card2.read(0);
           current2 = card2.read(1);
-          vin2 = card2.read(2);
+          vin2 = card2.read(2)
           T2 = card2.read(3);
 
           //Printing all data 
