@@ -439,6 +439,8 @@ void loop() {
          lcd.print(" ");
          do
          {
+          if(delta>=0.100) delta =0.100;
+          if(delta<0.001) delta =0.001;
           if(page==1)
           {
             current1 = card1.read(1);
@@ -452,9 +454,7 @@ void loop() {
             lcd.setCursor(15,2);
             if(calibration(current2,4)<10.0) lcd.print(calibration(current2,4),3);
             if(calibration(current2,4)>=10.0) lcd.print(calibration(current2,4),2);
-          }
-          if(delta>=1) delta =0.100;
-          if(delta<0.001) delta =0.001;
+          }          
           lcd.setCursor(15,3);
           lcd.print(delta,3); 
           if(counter != lastctr)
@@ -479,8 +479,12 @@ void loop() {
           lastctr = counter;
           delay(100); //important for debouncing of encoder push switch
           char customkey1 =Customkeypad.getKey();
-          if(customkey1 == '<') delta=delta*10;
-          if(customkey1 == '>') delta=delta/10;
+          if(customkey1 == '<') { delta=delta*10;
+            if(delta >= 0.100) delta =0.100;
+          }
+          if(customkey1 == '>') { delta=delta/10;
+            if(delta<0.001) delta =0.001;
+          }
           if(customkey1 == 'E')
           {
             last_counter = 0;
@@ -905,25 +909,37 @@ void Summaryscreen(){
         if ((currentMillis - lastmilis > 500))
         {
           lastmilis = currentMillis;
-          //Reading from ADC of Card2
-          vout1 = card1.read(0);
-          current1 = card1.read(1);
+          //Reading from ADC of Card2 with calibration
+          vout1 = calibration(card1.read(0),1);
+          current1 = calibration(card1.read(1),3);
           vin1 = card1.read(2);
           T1 = card1.read(3);
           W1 = vout1*current1;
 
-          //Reading from ADC of Card2
-          vout2 = card2.read(0);
-          current2 = card2.read(1);
+          if (vout1 <=0.003) vout1 = 0.000;
+          if (current1 <=0.003) current1 = 0.000;
+          if (T1 <=0.003) T1 = 0.000;
+          if (W1 <=0.003) W1 = 0.000;
+
+          
+
+          //Reading from ADC of Card2 with calibration 
+          vout2 = calibration(card2.read(0),1);
+          current2 = calibration(card2.read(1),3);
           vin2 = card2.read(2);
           T2 = card2.read(3);
           W2 = vout2*current2;
 
+          if (vout2 <=0.003) vout2 = 0.000;
+          if (current2 <=0.003) current2 = 0.000;
+          if (T2 <=0.003) T2 = 0.000;
+          if (W2 <=0.003) W2 = 0.000;
+
           //Printing all data 
-          lcd.setCursor(4,0);lcd.print(calibration(vout1,1),3);lcd.setCursor(14,0);lcd.print(calibration(current1,3),3);lcd.print(" ");
-          lcd.setCursor(4,1);lcd.print(vin1,2);lcd.setCursor(14,1);lcd.print(W1,1);lcd.print(" ");
-          lcd.setCursor(4,2);lcd.print(calibration(vout2,2),3);lcd.setCursor(14,2);lcd.print(calibration(current2,4),3);lcd.print(" ");
-          lcd.setCursor(4,3);lcd.print(vin2,2);lcd.setCursor(14,3);lcd.print(W2,1);lcd.print(" ");
+          lcd.setCursor(4,0);lcd.print(vout1,3);lcd.setCursor(14,0);lcd.print(current1,3);lcd.print(" ");
+          lcd.setCursor(4,1);lcd.print(vin1,2);lcd.setCursor(14,1);lcd.print(W1,3);lcd.print(" ");
+          lcd.setCursor(4,2);lcd.print(vout2,3);lcd.setCursor(14,2);lcd.print(current2,3);lcd.print(" ");
+          lcd.setCursor(4,3);lcd.print(vin2,2);lcd.setCursor(14,3);lcd.print(W2,3);lcd.print(" ");
         }
         if((last_counter > counter) || (last_counter < counter))
         {
