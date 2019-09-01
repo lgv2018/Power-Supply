@@ -904,8 +904,6 @@ void Summaryscreen(){
         
         if ((currentMillis - lastmilis > 1000))
         {
-          Serial.println(currentMillis);
-          Serial.println("inside");
           lastmilis = currentMillis;
           //Reading from ADC of Card2
           vout1 = card1.read(0);
@@ -916,7 +914,7 @@ void Summaryscreen(){
           //Reading from ADC of Card2
           vout2 = card2.read(0);
           current2 = card2.read(1);
-          vin2 = card2.read(2)
+          vin2 = card2.read(2);
           T2 = card2.read(3);
 
           //Printing all data 
