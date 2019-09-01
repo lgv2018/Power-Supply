@@ -797,9 +797,9 @@ void Summaryscreen(){
         //Printing fix portion of screen
         lcd.clear();
         lcd.setCursor(1,0); lcd.print("V1="); lcd.setCursor(11,0); lcd.print("A1=");
-        lcd.setCursor(1,1); lcd.print("Vi="); lcd.setCursor(11,1); lcd.print("T1=");
+        lcd.setCursor(1,1); lcd.print("Vi="); lcd.setCursor(11,1); lcd.print("W1=");
         lcd.setCursor(1,2); lcd.print("V2="); lcd.setCursor(11,2); lcd.print("A2=");
-        lcd.setCursor(1,3); lcd.print("Vi="); lcd.setCursor(11,3); lcd.print("T2=");
+        lcd.setCursor(1,3); lcd.print("Vi="); lcd.setCursor(11,3); lcd.print("W2=");
         //Printing Variable portion of screen 
         do {
         //Reading from ADC of Card1
@@ -902,7 +902,7 @@ void Summaryscreen(){
         
         unsigned long currentMillis = millis();
         
-        if ((currentMillis - lastmilis > 1000))
+        if ((currentMillis - lastmilis > 500))
         {
           lastmilis = currentMillis;
           //Reading from ADC of Card2
@@ -910,18 +910,20 @@ void Summaryscreen(){
           current1 = card1.read(1);
           vin1 = card1.read(2);
           T1 = card1.read(3);
+          W1 = vout1*current1;
 
           //Reading from ADC of Card2
           vout2 = card2.read(0);
           current2 = card2.read(1);
           vin2 = card2.read(2);
           T2 = card2.read(3);
+          W2 = vout2*current2;
 
           //Printing all data 
           lcd.setCursor(4,0);lcd.print(calibration(vout1,1),3);lcd.setCursor(14,0);lcd.print(calibration(current1,3),3);lcd.print(" ");
-          lcd.setCursor(4,1);lcd.print(vin1,2);lcd.setCursor(14,1);lcd.print(T1,1);lcd.print(" ");
+          lcd.setCursor(4,1);lcd.print(vin1,2);lcd.setCursor(14,1);lcd.print(W1,1);lcd.print(" ");
           lcd.setCursor(4,2);lcd.print(calibration(vout2,2),3);lcd.setCursor(14,2);lcd.print(calibration(current2,4),3);lcd.print(" ");
-          lcd.setCursor(4,3);lcd.print(vin2,2);lcd.setCursor(14,3);lcd.print(T2,1);lcd.print(" ");
+          lcd.setCursor(4,3);lcd.print(vin2,2);lcd.setCursor(14,3);lcd.print(W2,1);lcd.print(" ");
         }
         if((last_counter > counter) || (last_counter < counter))
         {

@@ -12,8 +12,8 @@ String Current_settings = "Current settings";
 String Voltage_settings = "Voltage settings";
 String calibration_str = "Calibration";
 
-float vout1 = 0.000, vin1 =0.000, current1 = 0.000, T1 =0.000;
-float vout2 = 0.000, vin2 =0.000, current2 = 0.000, T2 =0.000;
+float vout1 = 0.000, vin1 =0.000, current1 = 0.000, T1 =0.000, W1 =0.00;
+float vout2 = 0.000, vin2 =0.000, current2 = 0.000, T2 =0.000, W2 =0.00;
 uint8_t arrow[8] = {0x0, 0x04 ,0x06, 0x1f, 0x06, 0x04, 0x00, 0x00};
 float delta =0.10;
 float max_volt = 20.48 , min_volt = 0.00, max_current = 2.048, min_current = 0.000;
