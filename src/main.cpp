@@ -921,8 +921,6 @@ void Summaryscreen(){
           if (T1 <=0.003) T1 = 0.000;
           if (W1 <=0.003) W1 = 0.000;
 
-          
-
           //Reading from ADC of Card2 with calibration 
           vout2 = calibration(card2.read(0),1);
           current2 = calibration(card2.read(1),3);
