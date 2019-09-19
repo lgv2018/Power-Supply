@@ -443,6 +443,16 @@ void loop() {
           if(delta<0.001) delta =0.001;
           if(page==1)
           {
+              for (i=0; i<=20; i++)
+              {
+              lcd.setCursor(i,1);
+              lcd.print(" ");
+              }
+              for (i=0; i<=4; i++)
+              {
+              lcd.setCursor(i,2);
+              lcd.print(" ");
+              }
             current1 = card1.read(1);
             lcd.setCursor(15,2);
             if(calibration(current1,3)<10.0) lcd.print(calibration(current1,3),3);
@@ -450,6 +460,16 @@ void loop() {
           }
           if(page==2)
           {
+              for (i=0; i<=20; i++)
+              {
+              lcd.setCursor(i,0);
+              lcd.print(" ");
+              }
+              for (i=0; i<=4; i++)
+              {
+              lcd.setCursor(i,2);
+              lcd.print(" ");
+              }
             current2 = card2.read(1);
             lcd.setCursor(15,2);
             if(calibration(current2,4)<10.0) lcd.print(calibration(current2,4),3);
@@ -804,6 +824,7 @@ void Summaryscreen(){
         lcd.setCursor(1,1); lcd.print("Vi="); lcd.setCursor(11,1); lcd.print("W1=");
         lcd.setCursor(1,2); lcd.print("V2="); lcd.setCursor(11,2); lcd.print("A2=");
         lcd.setCursor(1,3); lcd.print("Vi="); lcd.setCursor(11,3); lcd.print("W2=");
+
         //Printing Variable portion of screen 
         do {
         //Reading from ADC of Card1
@@ -905,7 +926,6 @@ void Summaryscreen(){
         } 
         
         unsigned long currentMillis = millis();
-        
         if ((currentMillis - lastmilis > 500))
         {
           lastmilis = currentMillis;
@@ -916,22 +936,12 @@ void Summaryscreen(){
           T1 = card1.read(3);
           W1 = vout1*current1;
 
-          if (vout1 <=0.003) vout1 = 0.000;
-          if (current1 <=0.003) current1 = 0.000;
-          if (T1 <=0.003) T1 = 0.000;
-          if (W1 <=0.003) W1 = 0.000;
-
           //Reading from ADC of Card2 with calibration 
           vout2 = calibration(card2.read(0),1);
           current2 = calibration(card2.read(1),3);
           vin2 = card2.read(2);
           T2 = card2.read(3);
           W2 = vout2*current2;
-
-          if (vout2 <=0.003) vout2 = 0.000;
-          if (current2 <=0.003) current2 = 0.000;
-          if (T2 <=0.003) T2 = 0.000;
-          if (W2 <=0.003) W2 = 0.000;
 
           //Printing all data 
           lcd.setCursor(4,0);lcd.print(vout1,3);lcd.setCursor(14,0);lcd.print(current1,3);lcd.print(" ");
@@ -957,18 +967,22 @@ float calibration (float rawvalue, int param){
   case 1: //voltage card 1 i.e. V1
     //corrected_value = rawvalue;
     corrected_value = ((((rawvalue - cal[0][2]) * (cal[0][1] - cal[0][0])) / (cal[0][3] - cal[0][2])) + cal[0][0]);
+    if (corrected_value <=0.003) corrected_value = 0.000;
     return corrected_value;
     break;
   case 2: //voltage card 2 i.e. V2
     corrected_value = ((((rawvalue - cal[1][2]) * (cal[1][1] - cal[1][0])) / (cal[1][3] - cal[1][2])) + cal[1][0]);
+    if (corrected_value <=0.003) corrected_value = 0.000;
     return corrected_value;
     break;
   case 3: //current card 1 i.e. a1
     corrected_value = ((((rawvalue - cal[2][2]) * (cal[2][1] - cal[2][0])) / (cal[2][3] - cal[2][2])) + cal[2][0]);
+    if (corrected_value <=0.003) corrected_value = 0.000;
     return corrected_value;
     break;
   case 4: //current card 2 i.e. a2
     corrected_value = ((((rawvalue - cal[3][2]) * (cal[3][1] - cal[3][0])) / (cal[3][3] - cal[3][2])) + cal[3][0]);
+    if (corrected_value <=0.003) corrected_value = 0.000;
     return corrected_value;
     break;
   default:
