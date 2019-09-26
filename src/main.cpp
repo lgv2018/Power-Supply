@@ -1,14 +1,12 @@
 #include <Arduino.h>
 #include <LiquidCrystal_I2C.h>
 #include <EEPROM.h>
-#include <Keypad.h>
 #include <config.h>
 #include <powercard.h>
 
 //Defination of the powecard
 powercard card1 = powercard(0x60, 0x61, 0x68, 0x20);
 powercard card2 = powercard(0x62, 0x63, 0x6F, 0x21);
-
 
 void setup() 
 {
@@ -421,7 +419,7 @@ void loop() {
       lcd.setCursor(9,2);
       lcd.print("Iact= " );  
       lcd.setCursor(8,3);
-      lcd.print("Delta= " );
+      lcd.print(deltastring);
        if(page==1 || page==2 )
        {
          int COL = 0;
@@ -498,7 +496,7 @@ void loop() {
           lcd.print(set_current[COL],3);
           lastctr = counter;
           delay(100); //important for debouncing of encoder push switch
-          char customkey1 =Customkeypad.getKey();
+          char customkey1 =getkeey();
           if(customkey1 == '<') { delta=delta*10;
             if(delta >= 0.100) delta =0.100;
           }
@@ -545,7 +543,7 @@ void loop() {
       lcd.setCursor(9,2);
       lcd.print("Vact= " );  
       lcd.setCursor(8,3);
-      lcd.print("Delta= " );
+      lcd.print(deltastring);
        if(page==1 || page==2 )
        {
          int COL = 0;
@@ -603,7 +601,7 @@ void loop() {
           if(set_volt[COL]>=10.0) lcd.print(set_volt[COL],2);
           lastctr = counter;
           delay(100); //important for debouncing of encoder push switch
-          char customkey1 =Customkeypad.getKey();
+          char customkey1 =getkeey();
           if(customkey1 == '<') delta=delta*10;
           if(customkey1 == '>') delta=delta/10;
           if(customkey1 == 'E')
@@ -672,7 +670,7 @@ void loop() {
           lcd.print(cal[ROW1][COL],3);
           lastctr = counter;
           //delay(100); //important for debouncing of encoder push switch
-          char customkey1 = Customkeypad.getKey();
+          char customkey1 = getkeey();
           if(customkey1 == '<') delta=delta*10;
           if(customkey1 == '>') delta=delta/10;
           if(customkey1 == '1') ROW1 = 0;
@@ -775,7 +773,8 @@ void loop() {
     menu = 0;
   }
 
-  if(Customkeypad.getKey() == 'E')
+
+  if(getkeey() == 'E')
     {
       last_counter = 0;
       counter=0;
@@ -828,7 +827,7 @@ void Summaryscreen(){
         //Printing Variable portion of screen 
         do {
         //Reading from ADC of Card1
-        char customkey = Customkeypad.getKey();
+        char customkey = getkeey();
         switch (customkey)
         {
         case '1': // change current setting of the card 1
@@ -876,7 +875,7 @@ void Summaryscreen(){
           lcd.print ("Entering calibration..");
           do
           {
-            switch (Customkeypad.getKey())
+            switch (getkeey())
             {
             case '1':
               counter = 0;
@@ -1015,4 +1014,14 @@ float calibration_DAC (float rawvalue, int param){
     return rawvalue;
     break;
   }
+}
+
+char getkeey(){
+  if (digitalRead(2))
+  {
+    Wire.requestFrom(slaveadd, 1);
+    return Wire.read();
+    //Serial.println(c);
+  }
+  return 'z';
 }

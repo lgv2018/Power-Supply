@@ -11,6 +11,7 @@ String Back = "Back";
 String Current_settings = "Current settings";
 String Voltage_settings = "Voltage settings";
 String calibration_str = "Calibration";
+String deltastring = "Delta= ";
 
 float vout1 = 0.000, vin1 =0.000, current1 = 0.000, T1 =0.000, W1 =0.00;
 float vout2 = 0.000, vin2 =0.000, current2 = 0.000, T2 =0.000, W2 =0.00;
@@ -51,32 +52,21 @@ boolean B_set = false;            // interrupt service routine vars
 #define CHG_pump_card1 5
 #define CHG_pump_card2 6
 
-ulong summary_delay =5000;
+unsigned long summary_delay =5000;
 long reset_timer;
 
 int keypadEntry = 0;
-
-const byte ROWS = 5;
-const byte COLUMNS =4;
-byte rowPins[ROWS] = {13,12,11,10,9}; //connect to row pinout of the keypad
-byte columnPins[COLUMNS] = {A2,A3,A0,A1}; //connect to column pinout of keypad
-//Define symbols on keypad
-char hexakeys [ROWS][COLUMNS] = {
-  {'A','B','#','*'},
-  {'1','2','3','U'},
-  {'4','5','6','D'},
-  {'7','8','9','E'},
-  {'<','0','>','C'}
-};
 
 //function
 void doEncoderA();
 void doEncoderB();
 void Summaryscreen();
-//Defination of the keypad
-Keypad Customkeypad = Keypad(makeKeymap (hexakeys),rowPins,columnPins,ROWS, COLUMNS);
+char getkeey();
 float calibration (float rawvalue, int param);
 
 uint32_t lastmilis=0;
 
 int ROW1 = 0; //array row for calibration menu.
+
+
+#define slaveadd 50
