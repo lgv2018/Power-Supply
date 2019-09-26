@@ -1017,7 +1017,7 @@ float calibration_DAC (float rawvalue, int param){
 }
 
 char getkeey(){
-  if (digitalRead(2))
+  if (digitalRead(7))
   {
     Wire.requestFrom(slaveadd, 1);
     return Wire.read();
